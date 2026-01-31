@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>월곶포구 물때표 - (정적 JSON)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .current-date {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .tide-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .tide-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tide-item {
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tide-item:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .tide-item > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tide-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .high-tide {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .high-tide:before {
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q 25 30, 50 50 T 100 50' stroke='white' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+        }
+
+        .high-tide:hover {
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .low-tide {
+            background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
+            color: white;
+        }
+
+        .low-tide:before {
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q 25 70, 50 50 T 100 50' stroke='white' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+        }
+
+        .low-tide:hover {
+            box-shadow: 0 10px 30px rgba(86, 204, 242, 0.4);
+        }
+
+        .tide-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+        }
+
+        .tide-label {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .tide-time {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .tide-height {
+            font-size: 1em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .additional-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .wave-animation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 150px;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0 C150,50 350,50 600,20 C850,50 1050,50 1200,0 L1200,120 L0,120 Z' fill='%23ffffff'/%3E%3C/svg%3E");
+            animation: wave 10s linear infinite;
+        }
+
+        .wave:nth-child(2) {
+            bottom: 10px;
+            opacity: 0.5;
+            animation-delay: -5s;
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .refresh-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        .error-box {
+          background: rgba(255,255,255,0.95);
+          color: #333;
+          border-radius: 16px;
+          padding: 18px 20px;
+          max-width: 900px;
+          margin: 0 auto;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+          line-height: 1.5;
+        }
+
+        .error-box code {
+          background: rgba(0,0,0,0.06);
+          padding: 2px 6px;
+          border-radius: 6px;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+          font-size: 0.95em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .tide-card {
+                padding: 20px;
+            }
+            
+            .tide-info {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .tide-item {
+                padding: 20px 10px;
+            }
+
+            .tide-icon {
+                font-size: 2em;
+            }
+
+            .tide-time {
+                font-size: 1.5em;
+            }
+
+            .tide-height {
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wave-animation">
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🌊 월곶포구 물때표</h1>
+            <p>오늘의 만조 · 간조 정보</p>
+            <div class="current-date" id="currentDate"></div>
+            <button class="refresh-btn" onclick="loadMonthlyTideData(true)">🔄 새로고침</button>
+        </div>
+
+        <div id="tideContainer" class="loading">
+            데이터를 불러오는 중...
+        </div>
+    </div>
+
+    <script>
+        const STATION_NAME = "월곶포구";
+        const JSON_BASE_PATH = "./data/tide";
+        const monthlyCache = {};
+
+    function pad2(n) { return String(n).padStart(2, "0"); }
+
+    function kstNow() {
+      const now = new Date();
+      const fmt = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "Asia/Seoul",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      });
+      const parts = fmt.formatToParts(now).reduce((acc, p) => {
+        acc[p.type] = p.value;
+        return acc;
+      }, {});
+      return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}+09:00`);
+    }
+
+    async function loadMonthlyTideData(forceReload = false) {
+      const now = kstNow();
+      const year = now.getFullYear();
+      const month = pad2(now.getMonth() + 1);
+      const day = now.getDate();
+      const monthKey = `${year}-${month}`;
+
+      const container = document.getElementById("tideContainer");
+      container.innerHTML = '<div class="loading">📡 물때 데이터를 불러오는 중...</div>';
+
+      try {
+        if (!forceReload && monthlyCache[monthKey]) {
+          displayTodaysTide(monthlyCache[monthKey], year, month, day);
+          return;
+        }
+
+        const url = `${JSON_BASE_PATH}/${monthKey}.json?ts=${Date.now()}`;
+        const resp = await fetch(url, { cache: "no-store" });
+        if (!resp.ok) {
+          throw new Error(`JSON fetch failed: HTTP ${resp.status} (${url})`);
+        }
+
+        const monthData = await resp.json();
+        monthlyCache[monthKey] = monthData;
+
+        displayTodaysTide(monthData, year, month, day);
+      } catch (e) {
+        console.log("월간 JSON 로딩 실패:", e);
+        showFriendlyError(e);
+        displaySampleData();
+      }
+    }
+        
+    function displayTodaysTide(monthData, year, month, day) {
+      const now = kstNow();
+      const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+      const dateStr = `${year}년 ${parseInt(month, 10)}월 ${day}일 (${weekdays[now.getDay()]})`;
+
+      const today = monthData[String(day)];
+      if (!today) {
+        showFriendlyError(new Error(`오늘(${year}-${month}-${day}) 데이터가 JSON에 없음`));
+        displaySampleData();
+        return;
+      }
+
+      const data = {
+        date: dateStr,
+        moonPhase: today.moonPhase || "--",
+        highTides: Array.isArray(today.highTides) && today.highTides.length ? today.highTides : [{ time: "--:--", height: "--", change: "--" }],
+        lowTides: Array.isArray(today.lowTides) && today.lowTides.length ? today.lowTides : [{ time: "--:--", height: "--", change: "--" }],
+        sunrise: today.sunrise || "--:--",
+        sunset: today.sunset || "--:--",
+        moonrise: today.moonrise || "--:--",
+        moonset: today.moonset || "--:--"
+      };
+
+      displayTideData(data);
+    }
+
+    function showFriendlyError(err) {
+      const container = document.getElementById("tideContainer");
+      const msg = String(err && err.message ? err.message : err);
+      container.innerHTML = `
+        <div class="error-box">
+          <div style="font-weight: 800; margin-bottom: 10px;">데이터 로딩에 문제가 발생했음</div>
+          <div style="margin-bottom: 10px;">
+            현재 UI는 정적 JSON 파일(<code>${JSON_BASE_PATH}/YYYY-MM.json</code>)을 읽도록 되어있음. 이 파일이 아직 생성되지 않았거나(초기), GitHub Actions가 실패했거나, GitHub Pages 배포가 아직 반영되지 않았을 때 이 메시지가 나올 수 있음.
+          </div>
+          <div style="margin-bottom: 10px;"><span style="font-weight:700;">에러:</span> <code>${escapeHtml(msg)}</code></div>
+          <div>임시로 샘플 데이터를 화면에 표시함.</div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(s) {
+      return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    function displaySampleData() {
+      const now = kstNow();
+      const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+      const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${weekdays[now.getDay()]})`;
+
+      const dayOffset = now.getDate();
+      const baseMinutes = (dayOffset * 50) % (12 * 60);
+
+      function formatTime(minutes) {
+        const h = Math.floor(minutes / 60) % 24;
+        const m = minutes % 60;
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      }
+
+      const tide1 = baseMinutes;
+      const tide2 = (baseMinutes + 370) % (24 * 60);
+      const tide3 = (baseMinutes + 740) % (24 * 60);
+      const tide4 = (baseMinutes + 1110) % (24 * 60);
+
+      const times = [
+        { minutes: tide1, type: "high" },
+        { minutes: tide2, type: "low" },
+        { minutes: tide3, type: "high" },
+        { minutes: tide4, type: "low" }
+      ].sort((a, b) => a.minutes - b.minutes);
+
+      const highTides = [];
+      const lowTides = [];
+
+      times.forEach(t => {
+        if (t.type === "high") {
+          highTides.push({ time: formatTime(t.minutes), height: `--`, change: `--` });
+        } else {
+          lowTides.push({ time: formatTime(t.minutes), height: `--`, change: `--` });
+        }
+      });
+
+      const sampleData = {
+        date: dateStr,
+        moonPhase: "--",
+        highTides,
+        lowTides,
+        sunrise: "--:--",
+        sunset: "--:--",
+        moonrise: "--:--",
+        moonset: "--:--"
+      };
+
+      displayTideData(sampleData);
+    }
+
+    function displayTideData(data) {
+      const container = document.getElementById("tideContainer");
+
+      let tideHTML = `
+        <div class="tide-card">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #667eea; font-size: 1.8em;">${data.date}</h2>
+            <p style="color: #666; margin-top: 10px;">${STATION_NAME} · ${data.moonPhase}</p>
+          </div>
+          <div class="tide-info">
+      `;
+
+      data.highTides.forEach((tide, index) => {
+        tideHTML += `
+          <div class="tide-item high-tide">
+            <div class="tide-icon">⬆️</div>
+            <div class="tide-label">만조 ${index + 1}</div>
+            <div class="tide-time">${tide.time}</div>
+            <div class="tide-height">${tide.height}</div>
+            <div class="tide-height" style="font-size: 0.9em;">${tide.change}</div>
+          </div>
+        `;
+      });
+
+      data.lowTides.forEach((tide, index) => {
+        tideHTML += `
+          <div class="tide-item low-tide">
+            <div class="tide-icon">⬇️</div>
+            <div class="tide-label">간조 ${index + 1}</div>
+            <div class="tide-time">${tide.time}</div>
+            <div class="tide-height">${tide.height}</div>
+            <div class="tide-height" style="font-size: 0.9em;">${tide.change}</div>
+          </div>
+        `;
+      });
+
+      tideHTML += `
+          </div>
+          <div class="additional-info">
+            <div class="info-item">
+              <div class="info-label">🌅 일출</div>
+              <div class="info-value">${data.sunrise}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">🌇 일몰</div>
+              <div class="info-value">${data.sunset}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">🌙 월출</div>
+              <div class="info-value">${data.moonrise}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">🌑 월몰</div>
+              <div class="info-value">${data.moonset}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = tideHTML;
+    }
+
+    function updateCurrentDate() {
+      const now = kstNow();
+      const options = {
+        year: "numeric", month: "long", day: "numeric",
+        weekday: "long", hour: "2-digit", minute: "2-digit",
+        timeZone: "Asia/Seoul"
+      };
+      document.getElementById("currentDate").textContent = now.toLocaleDateString("ko-KR", options);
+    }
+
+    updateCurrentDate();
+    loadMonthlyTideData(false);
+
+    setInterval(updateCurrentDate, 60000);
+
+    let lastDate = kstNow().getDate();
+    setInterval(() => {
+      const currentDate = kstNow().getDate();
+      if (currentDate !== lastDate) {
+        lastDate = currentDate;
+        loadMonthlyTideData(true);
+      }
+    }, 60000);
+    </script>
+</body>
+</html>

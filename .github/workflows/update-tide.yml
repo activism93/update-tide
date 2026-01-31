@@ -1,0 +1,51 @@
+name: update tide json
+
+on:
+  schedule:
+    - cron: "5 15 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tide-json-update
+  cancel-in-progress: false
+
+jobs:
+  build-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: generate json
+        env:
+          TIDE_IDX: "162"
+          TIDE_STATION_NAME: "월곶포구"
+          TZ: "Asia/Seoul"
+        run: |
+          python scripts/update_tide_json.py
+
+      - name: commit & push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git add data/tide/*.json
+            git commit -m "chore: update tide json"
+            git push
+          else
+            echo "no changes"
+          fi
