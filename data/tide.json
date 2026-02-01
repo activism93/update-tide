@@ -4,6 +4,7 @@
   "weekday": "Sunday",
   "location": "월곶포구",
   "source": "badatime.com",
+<<<<<<< HEAD
   "last_updated": "2026-02-01T19:32:28.295211+09:00",
   "high_tides": [
     {
@@ -17,10 +18,14 @@
   ],
   "low_tides": [
     {
+      "time": "10:33",
+      "height": 48
+    },
+    {
       "time": "23:23",
       "height": 111
     }
   ],
-  "sunrise": "",
-  "sunset": ""
+  "sunrise": "07:37",
+  "sunset": "17:57"
 }

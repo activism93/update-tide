@@ -32,72 +32,88 @@ def extract_tide_info(html_content: str) -> Dict[str, Any]:
         'sunset': ''
     }
     
-    # Extract high tides (만조) - look for times with heights after 만조 label
-    # Pattern: 만조 followed by times like "04:20 (698)"
-    high_tide_section = re.search(r'만조.*?(?=간조|일출|$)', text_content, re.DOTALL)
-    if high_tide_section:
-        high_section = high_tide_section.group(0)
-        high_tide_pattern = r'(\d{1,2}:\d{2})\s*\((\d+)\)'
-        high_matches = re.findall(high_tide_pattern, high_section)
+    # Method 1: Extract using table structure patterns
+    # Pattern for 만조 (high tide) section
+    high_pattern = r'만조.*?((?:\d{1,2}:\d{2}\s*\(\s*\d+\s*\).*?)+)'
+    high_match = re.search(high_pattern, text_content, re.DOTALL)
+    if high_match:
+        high_section = high_match.group(1)
+        high_time_pattern = r'(\d{1,2}:\d{2})\s*\(\s*(\d+)\s*\)'
+        high_matches = re.findall(high_time_pattern, high_section)
         
-        for time_str, height in high_matches[:2]:  # Only take first 2 high tides
-            result['high_tides'].append({
-                'time': time_str,
-                'height': int(height)
-            })
-    
-    # Extract low tides (간조) - look for times with heights after 간조 label  
-    low_tide_section = re.search(r'간조.*?(?=일출|$)', text_content, re.DOTALL)
-    if low_tide_section:
-        low_section = low_tide_section.group(0)
-        low_tide_pattern = r'(\d{1,2}:\d{2})\s*\((\d+)\)'
-        low_matches = re.findall(low_tide_pattern, low_section)
-        
-        for time_str, height in low_matches[:2]:  # Only take first 2 low tides
-            result['low_tides'].append({
-                'time': time_str,
-                'height': int(height)
-            })
-    
-    # Extract sunrise and sunset from 일출/일몰 section
-    sunrise_sunset_section = re.search(r'일출/일몰.*?$', text_content, re.DOTALL)
-    if sunrise_sunset_section:
-        ss_section = sunrise_sunset_section.group(0)
-        # Look for patterns like "일출 06:30" and "일몰 18:45"
-        sunrise_match = re.search(r'일출.*?(\d{1,2}:\d{2})', ss_section)
-        sunset_match = re.search(r'일몰.*?(\d{1,2}:\d{2})', ss_section)
-        
-        if sunrise_match:
-            result['sunrise'] = sunrise_match.group(1)
-        if sunset_match:
-            result['sunset'] = sunset_match.group(1)
-    
-    # Fallback: if section extraction didn't work, try global patterns
-    if not result['high_tides']:
-        # Alternative pattern: find all times with ▲ symbols (high tide)
-        high_alt_pattern = r'(\d{1,2}:\d{2})\s*\(\d+\)[^▲]*▲'
-        high_alt_matches = re.findall(high_alt_pattern, text_content)
-        for time_str in high_alt_matches[:2]:
-            # Extract height separately
-            height_match = re.search(fr'{re.escape(time_str)}\s*\((\d+)\)', text_content)
-            if height_match:
+        for time_str, height_str in high_matches[:2]:
+            try:
+                height = int(height_str)
                 result['high_tides'].append({
-                    'time': time_str,
-                    'height': int(height_match.group(1))
+                    'time': time_str.strip(),
+                    'height': height
                 })
+            except ValueError:
+                continue
     
-    if not result['low_tides']:
-        # Alternative pattern: find all times with ▼ symbols (low tide)
-        low_alt_pattern = r'(\d{1,2}:\d{2})\s*\(\d+\)[^▼]*▼'
-        low_alt_matches = re.findall(low_alt_pattern, text_content)
-        for time_str in low_alt_matches[:2]:
-            # Extract height separately
-            height_match = re.search(fr'{re.escape(time_str)}\s*\((\d+)\)', text_content)
-            if height_match:
+    # Pattern for 간조 (low tide) section
+    low_pattern = r'간조.*?((?:\d{1,2}:\d{2}\s*\(\s*\d+\s*\).*?)+)'
+    low_match = re.search(low_pattern, text_content, re.DOTALL)
+    if low_match:
+        low_section = low_match.group(1)
+        low_time_pattern = r'(\d{1,2}:\d{2})\s*\(\s*(\d+)\s*\)'
+        low_matches = re.findall(low_time_pattern, low_section)
+        
+        for time_str, height_str in low_matches[:2]:
+            try:
+                height = int(height_str)
                 result['low_tides'].append({
-                    'time': time_str,
-                    'height': int(height_match.group(1))
+                    'time': time_str.strip(),
+                    'height': height
                 })
+            except ValueError:
+                continue
+    
+    # Extract sunrise/sunset - specific pattern for "일출/일몰	07:37/17:57"
+    sunrise_sunset_pattern = r'일출/일몰\s*(\d{1,2}:\d{2})/(\d{1,2}:\d{2})'
+    sunrise_sunset_match = re.search(sunrise_sunset_pattern, text_content)
+    if sunrise_sunset_match:
+        result['sunrise'] = sunrise_sunset_match.group(1)
+        result['sunset'] = sunrise_sunset_match.group(2)
+    
+    # Method 2: Fallback using global patterns if specific sections didn't work
+    if len(result['high_tides']) < 2:
+        # Alternative: find all patterns with ▲ symbols
+        global_high_pattern = r'(\d{1,2}:\d{2})\s*\(\s*(\d+)\s*\)[^▲]*▲'
+        high_matches = re.findall(global_high_pattern, text_content)
+        
+        for time_str, height_str in high_matches[:2]:
+            try:
+                height = int(height_str)
+                # Avoid duplicates
+                if not any(t['time'] == time_str for t in result['high_tides']):
+                    result['high_tides'].append({
+                        'time': time_str.strip(),
+                        'height': height
+                    })
+            except ValueError:
+                continue
+    
+    if len(result['low_tides']) < 2:
+        # Alternative: find all patterns with ▼ symbols  
+        global_low_pattern = r'(\d{1,2}:\d{2})\s*\(\s*(\d+)\s*\)[^▼]*▼'
+        low_matches = re.findall(global_low_pattern, text_content)
+        
+        for time_str, height_str in low_matches[:2]:
+            try:
+                height = int(height_str)
+                # Avoid duplicates
+                if not any(t['time'] == time_str for t in result['low_tides']):
+                    result['low_tides'].append({
+                        'time': time_str.strip(),
+                        'height': height
+                    })
+            except ValueError:
+                continue
+    
+    # Remove duplicates between high and low tides
+    high_times = {t['time'] for t in result['high_tides']}
+    result['low_tides'] = [t for t in result['low_tides'] if t['time'] not in high_times]
     
     return result
 
