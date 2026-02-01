@@ -14,98 +14,100 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 def extract_tide_data(html_content: str, year: int, month: int) -> Dict:
-    """HTML에서 물때 데이터 추출"""
+    """HTML에서 물때 데이터 추출 - 실제 월별 데이터만 추출"""
     month_data = {}
     
     try:
         soup = BeautifulSoup(html_content, 'html.parser')
-        body_text = soup.get_text()
         
         print("=== HTML 내용 분석 ===")
-        print(f"전체 텍스트 길이: {len(body_text)}")
+        print(f"전체 텍스트 길이: {len(html_content)}")
         
-        if '▲' not in body_text and '▼' not in body_text:
+        if '▲' not in html_content and '▼' not in html_content:
             print("물때 정보(▲▼)를 찾을 수 없습니다")
             print("HTML 내용 샘플:")
-            print(body_text[:500] + "...")
+            print(html_content[:500] + "...")
             return {}
         
         print("물때 정보 발견! 데이터 추출 시작...")
         
-        # 다양한 패턴으로 물때 정보 추출 시도
-        patterns = [
-            r'(\d+)[일日]\s*((?:\d{1,2}:\d{2}[▲▼]\s*)+)',
-            r'(\d+)[일日][^▲▼\n]*?((?:\d{1,2}:\d{2}[▲▼]\s*)+)',
-            r'(\d+)[\s\n]*((?:\d{1,2}:\d{2}[▲▼]\s*)+)',
-        ]
+        # 월별 달력에서 날짜별 데이터 추출
+        lines = html_content.split('\n')
         
-        for pattern_idx, pattern in enumerate(patterns):
-            print(f"패턴 {pattern_idx + 1} 시도: {pattern}")
-            matches = list(re.finditer(pattern, body_text))
-            print(f"  매치 수: {len(matches)}")
-            
-            for match in matches:
-                try:
-                    day = int(match.group(1))
-                    tides_text = match.group(2)
+        for line_idx, line in enumerate(lines):
+            # 날짜가 있는 라인 찾기
+            day_match = re.search(r'(\d+)[일日]', line)
+            if day_match:
+                day = int(day_match.group(1))
+                
+                # 해당 날짜의 모든 셀에서 물때 정보 추출
+                high_tides = []
+                low_tides = []
+                used_times = set()
+                
+                # 라인에서 모든 HH:MM▲/▼ 패턴 찾기
+                tide_pattern = r'(\d{1,2}):(\d{2})([▲▼])'
+                
+                for tide_match in re.finditer(tide_pattern, line):
+                    hour = int(tide_match.group(1))
+                    minute = int(tide_match.group(2))
+                    time_str = f"{hour:02d}:{minute:02d}"
                     
-                    print(f"  {day}일 데이터: {tides_text.strip()}")
+                    # 중복 제거
+                    if time_str in used_times:
+                        continue
                     
-                    tide_pattern = r'(\d{1,2}):(\d{2})([▲▼])'
-                    high_tides = []
-                    low_tides = []
+                    used_times.add(time_str)
                     
-                    for tide_match in re.finditer(tide_pattern, tides_text):
-                        hour = tide_match.group(1).zfill(2)
-                        minute = tide_match.group(2)
-                        tide_type = tide_match.group(3)
-                        time_str = f"{hour}:{minute}"
-                        
-                        if tide_type == '▲':
-                            high_tides.append({"time": time_str, "height": "--", "change": "--"})
-                        elif tide_type == '▼':
-                            low_tides.append({"time": time_str, "height": "--", "change": "--"})
+                    tide_data = {
+                        "time": time_str,
+                        "height": "--",
+                        "change": "--"
+                    }
                     
-                    if high_tides or low_tides:
-                        print(f"    만조: {[t['time'] for t in high_tides]}")
-                        print(f"    간조: {[t['time'] for t in low_tides]}")
-                        
-                        moon_phase_num = ((day - 1) % 15) + 1
-                        
-                        if moon_phase_num >= 1 and moon_phase_num <= 3:
-                            phase_description = '조금 (물살 약함)'
-                        elif moon_phase_num >= 4 and moon_phase_num <= 7:
-                            phase_description = '중물 (물살 보통)'
-                        elif moon_phase_num >= 8 and moon_phase_num <= 9:
-                            phase_description = '사리 (물살 강함)'
-                        elif moon_phase_num >= 10 and moon_phase_num <= 12:
-                            phase_description = '중물 (물살 보통)'
-                        else:
-                            phase_description = '조금 (물살 약함)'
-                        
-                        month_data[str(day)] = {
-                            "highTides": high_tides,
-                            "lowTides": low_tides,
-                            "moonPhase": f"{moon_phase_num}물 - {phase_description}",
-                            "sunrise": "07:39",
-                            "sunset": "17:54",
-                            "moonrise": "13:35",
-                            "moonset": "04:19"
-                        }
-                except Exception as e:
-                    print(f"    매치 처리 오류: {e}")
-                    continue
-            
-            if month_data:
-                break
+                    if tide_match.group(3) == '▲':
+                        if len(high_tides) < 2:  # 만조는 최대 2개
+                            high_tides.append(tide_data)
+                        elif tide_match.group(3) == '▼':
+                            if len(low_tides) < 2:  # 간조는 최대 2개
+                                low_tides.append(tide_data)
+                    
+                # 유효한 데이터 확인
+                if high_tides or low_tides:
+                    print(f"  {day}일 - 만조: {[t['time'] for t in high_tides]} ({len(high_tides)}개)")
+                    print(f"  {day}일 - 간조: {[t['time'] for t in low_tides]} ({len(low_tides)}개)")
+                    
+                    # 월물 계산 (1-15물)
+                    moon_phase_num = ((day - 1) % 15) + 1
+                    
+                    if moon_phase_num >= 1 and moon_phase_num <= 3:
+                        phase_description = '조금 (물살 약함)'
+                    elif moon_phase_num >= 4 and moon_phase_num <= 7:
+                        phase_description = '중물 (물살 보통)'
+                    elif moon_phase_num >= 8 and moon_phase_num <= 9:
+                        phase_description = '사리 (물살 강함)'
+                    elif moon_phase_num >= 10 and moon_phase_num <= 12:
+                        phase_description = '중물 (물살 보통)'
+                    else:
+                        phase_description = '조금 (물살 약함)'
+                    
+                    month_data[str(day)] = {
+                        "highTides": high_tides,
+                        "lowTides": low_tides,
+                        "moonPhase": f"{moon_phase_num}물 - {phase_description}",
+                        "sunrise": "07:39",
+                        "sunset": "17:54",
+                        "moonrise": "13:35",
+                        "moonset": "04:19"
+                    }
         
         print(f"총 {len(month_data)}일의 데이터 추출됨")
         
         if month_data:
-            first_day = min(month_data.keys())
-            print(f"샘플 데이터 ({first_day}일):")
-            print(f"  만조: {[t['time'] for t in month_data[first_day]['highTides']]}")
-            print(f"  간조: {[t['time'] for t in month_data[first_day]['lowTides']]}")
+            sample_day = list(month_data.keys())[0]
+            print(f"샘플 데이터 ({sample_day}일):")
+            print(f"  만조: {[t['time'] for t in month_data[sample_day]['highTides']]}")
+            print(f"  간조: {[t['time'] for t in month_data[sample_day]['lowTides']]}")
         
         return month_data
         
@@ -164,7 +166,10 @@ def fetch_with_selenium(year: int, month: int) -> Optional[Dict]:
                 return None
                 
         except Exception as e:
-            driver.quit()
+            try:
+                driver.quit()
+            except:
+                pass
             raise e
             
     except Exception as e:
@@ -524,22 +529,18 @@ def fetch_tide_data(year: int, month: int) -> Optional[Dict]:
     try:
         print(f"🔍 {year}년 {month:02d}월 월곶포구 물때 데이터 가져오기 시작")
         
-        # 방법 1: Selenium으로 JavaScript 렌더링된 데이터 가져오기
         data = fetch_with_selenium(year, month)
         if data:
             return data
             
-        # 방법 2: API 엔드포인트 직접 호출 시도
         data = fetch_direct_api(year, month)
         if data:
             return data
             
-        # 방법 3: 다른 물때 사이트 활용
         data = fetch_alternative_source(year, month)
         if data:
             return data
             
-        # 방법 4: 모바일 API 시도
         data = fetch_mobile_api(year, month)
         if data:
             return data
@@ -587,19 +588,15 @@ def main():
     # month = 2
     
     print(f"물때 데이터 생성 시작: {year}-{month:02d}")
-    print(f"목표 연월: {year}-{month:02d}")
     
     try:
-        # 반드시 실제 데이터를 가져와야 함
         tide_data = fetch_tide_data(year, month)
         
         if not tide_data or len(tide_data) == 0:
             raise Exception("데이터를 가져오지 못했습니다")
         
         print(f"실제 데이터 가져오기 성공: {len(tide_data)}일")
-        print(f"데이터 샘플: {list(tide_data.items())[:2]}")
         
-        # 데이터 저장
         if save_tide_data(tide_data, year, month):
             print("✅ 완료!")
             
