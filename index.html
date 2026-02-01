@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>월곶포구 물때표 - (정적 JSON)</title>
+    <title>월곶포구 물때표</title>
     <style>
         * {
             margin: 0;
@@ -321,7 +321,7 @@
             <h1>🌊 월곶포구 물때표</h1>
             <p>오늘의 만조 · 간조 정보</p>
             <div class="current-date" id="currentDate"></div>
-            <button class="refresh-btn" onclick="loadMonthlyTideData(true)">🔄 새로고침</button>
+            <button class="refresh-btn" onclick="loadTodayTideData(true)">🔄 새로고침</button>
         </div>
 
         <div id="tideContainer" class="loading">
@@ -331,8 +331,8 @@
 
     <script>
         const STATION_NAME = "월곶포구";
-        const JSON_BASE_PATH = "./data/tide";
-        const monthlyCache = {};
+        const JSON_PATH = "./data/tide.json";
+        let lastTideData = null;
 
     function pad2(n) { return String(n).padStart(2, "0"); }
 
@@ -350,60 +350,47 @@
       return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}+09:00`);
     }
 
-    async function loadMonthlyTideData(forceReload = false) {
-      const now = kstNow();
-      const year = now.getFullYear();
-      const month = pad2(now.getMonth() + 1);
-      const day = now.getDate();
-      const monthKey = `${year}-${month}`;
-
+    async function loadTodayTideData(forceReload = false) {
       const container = document.getElementById("tideContainer");
-      container.innerHTML = '<div class="loading">📡 물때 데이터를 불러오는 중...</div>';
+      container.innerHTML = '<div class="loading">📡 오늘의 조수 데이터를 불러오는 중...</div>';
 
       try {
-        if (!forceReload && monthlyCache[monthKey]) {
-          displayTodaysTide(monthlyCache[monthKey], year, month, day);
-          return;
-        }
-
-        const url = `${JSON_BASE_PATH}/${monthKey}.json?ts=${Date.now()}`;
+        const url = `${JSON_PATH}?ts=${Date.now()}`;
+        console.log("Loading from:", url);
+        
         const resp = await fetch(url, { cache: "no-store" });
         if (!resp.ok) {
           throw new Error(`JSON fetch failed: HTTP ${resp.status} (${url})`);
         }
 
-        const monthData = await resp.json();
-        monthlyCache[monthKey] = monthData;
-
-        displayTodaysTide(monthData, year, month, day);
+        const tideData = await resp.json();
+        console.log("Loaded tide data:", tideData);
+        lastTideData = tideData;
+        
+        displayTideDataFromJSON(tideData);
       } catch (e) {
-        console.log("월간 JSON 로딩 실패:", e);
+        console.log("오늘의 조수 데이터 로딩 실패:", e);
         showFriendlyError(e);
         displaySampleData();
       }
     }
         
-    function displayTodaysTide(monthData, year, month, day) {
+    function displayTideDataFromJSON(tideData) {
       const now = kstNow();
       const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-      const dateStr = `${year}년 ${parseInt(month, 10)}월 ${day}일 (${weekdays[now.getDay()]})`;
-
-      const today = monthData[String(day)];
-      if (!today) {
-        showFriendlyError(new Error(`오늘(${year}-${month}-${day}) 데이터가 JSON에 없음`));
-        displaySampleData();
-        return;
-      }
-
+      
+      // Use date from JSON data, or current date if not available
+      let dateStr = tideData.korean_date || `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${weekdays[now.getDay()]})`;
+      
       const data = {
         date: dateStr,
-        moonPhase: today.moonPhase || "--",
-        highTides: Array.isArray(today.highTides) && today.highTides.length ? today.highTides : [{ time: "--:--", height: "--", change: "--" }],
-        lowTides: Array.isArray(today.lowTides) && today.lowTides.length ? today.lowTides : [{ time: "--:--", height: "--", change: "--" }],
-        sunrise: today.sunrise || "--:--",
-        sunset: today.sunset || "--:--",
-        moonrise: today.moonrise || "--:--",
-        moonset: today.moonset || "--:--"
+        moonPhase: tideData.moon_phase || "--",
+        highTides: Array.isArray(tideData.high_tides) && tideData.high_tides.length ? tideData.high_tides : [{ time: "--:--", height: "--" }],
+        lowTides: Array.isArray(tideData.low_tides) && tideData.low_tides.length ? tideData.low_tides : [{ time: "--:--", height: "--" }],
+        sunrise: tideData.sunrise || "--:--",
+        sunset: tideData.sunset || "--:--",
+        moonrise: tideData.moonrise || "--:--",
+        moonset: tideData.moonset || "--:--"
       };
 
       displayTideData(data);
@@ -416,7 +403,7 @@
         <div class="error-box">
           <div style="font-weight: 800; margin-bottom: 10px;">데이터 로딩에 문제가 발생했음</div>
           <div style="margin-bottom: 10px;">
-            현재 UI는 정적 JSON 파일(<code>${JSON_BASE_PATH}/YYYY-MM.json</code>)을 읽도록 되어있음. 이 파일이 아직 생성되지 않았거나(초기), GitHub Actions가 실패했거나, GitHub Pages 배포가 아직 반영되지 않았을 때 이 메시지가 나올 수 있음.
+            현재 UI는 정적 JSON 파일(<code>${JSON_PATH}</code>)을 읽도록 되어있음. 이 파일이 아직 생성되지 않았거나(초기), GitHub Actions가 실패했거나, GitHub Pages 배포가 아직 반영되지 않았을 때 이 메시지가 나올 수 있음.
           </div>
           <div style="margin-bottom: 10px;"><span style="font-weight:700;">에러:</span> <code>${escapeHtml(msg)}</code></div>
           <div>임시로 샘플 데이터를 화면에 표시함.</div>
@@ -433,37 +420,14 @@
       const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
       const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${weekdays[now.getDay()]})`;
 
-      const dayOffset = now.getDate();
-      const baseMinutes = (dayOffset * 50) % (12 * 60);
-
-      function formatTime(minutes) {
-        const h = Math.floor(minutes / 60) % 24;
-        const m = minutes % 60;
-        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-      }
-
-      const tide1 = baseMinutes;
-      const tide2 = (baseMinutes + 370) % (24 * 60);
-      const tide3 = (baseMinutes + 740) % (24 * 60);
-      const tide4 = (baseMinutes + 1110) % (24 * 60);
-
-      const times = [
-        { minutes: tide1, type: "high" },
-        { minutes: tide2, type: "low" },
-        { minutes: tide3, type: "high" },
-        { minutes: tide4, type: "low" }
-      ].sort((a, b) => a.minutes - b.minutes);
-
-      const highTides = [];
-      const lowTides = [];
-
-      times.forEach(t => {
-        if (t.type === "high") {
-          highTides.push({ time: formatTime(t.minutes), height: `--`, change: `--` });
-        } else {
-          lowTides.push({ time: formatTime(t.minutes), height: `--`, change: `--` });
-        }
-      });
+      const highTides = [
+        { time: "06:30", height: "350" },
+        { time: "18:45", height: "280" }
+      ];
+      const lowTides = [
+        { time: "00:15", height: "120" },
+        { time: "12:20", height: "80" }
+      ];
 
       const sampleData = {
         date: dateStr,
@@ -497,8 +461,7 @@
             <div class="tide-icon">⬆️</div>
             <div class="tide-label">만조 ${index + 1}</div>
             <div class="tide-time">${tide.time}</div>
-            <div class="tide-height">${tide.height}</div>
-            <div class="tide-height" style="font-size: 0.9em;">${tide.change}</div>
+            <div class="tide-height">${tide.height}${tide.height !== "--" ? "cm" : ""}</div>
           </div>
         `;
       });
@@ -509,8 +472,7 @@
             <div class="tide-icon">⬇️</div>
             <div class="tide-label">간조 ${index + 1}</div>
             <div class="tide-time">${tide.time}</div>
-            <div class="tide-height">${tide.height}</div>
-            <div class="tide-height" style="font-size: 0.9em;">${tide.change}</div>
+            <div class="tide-height">${tide.height}${tide.height !== "--" ? "cm" : ""}</div>
           </div>
         `;
       });
@@ -552,16 +514,16 @@
     }
 
     updateCurrentDate();
-    loadMonthlyTideData(false);
+    loadTodayTideData(false);
 
     setInterval(updateCurrentDate, 60000);
 
-    let lastDate = kstNow().getDate();
+    let lastHour = kstNow().getHours();
     setInterval(() => {
-      const currentDate = kstNow().getDate();
-      if (currentDate !== lastDate) {
-        lastDate = currentDate;
-        loadMonthlyTideData(true);
+      const currentHour = kstNow().getHours();
+      if (currentHour !== lastHour) {
+        lastHour = currentHour;
+        loadTodayTideData(true);
       }
     }, 60000);
     </script>
