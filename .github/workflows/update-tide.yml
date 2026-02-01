@@ -41,10 +41,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Check if there are any changes
           if [ -n "$(git status --porcelain)" ]; then
-            git add data/tide/*.json
-            git commit -m "chore: update tide json"
-            git push
+            echo "Changes detected, committing..."
+            git add data/tide.json
+            # Check if there's actually anything to commit after adding
+            if [ -n "$(git diff --cached --name-only)" ]; then
+              git commit -m "chore: update today's tide data"
+              git push
+              echo "Changes pushed successfully"
+            else
+              echo "No changes to commit after adding files"
+            fi
           else
-            echo "no changes"
+            echo "No changes detected"
           fi
