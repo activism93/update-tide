@@ -389,8 +389,7 @@
         lowTides: Array.isArray(tideData.low_tides) && tideData.low_tides.length ? tideData.low_tides : [{ time: "--:--", height: "--" }],
         sunrise: tideData.sunrise || "--:--",
         sunset: tideData.sunset || "--:--",
-        moonrise: tideData.moonrise || "--:--",
-        moonset: tideData.moonset || "--:--"
+
       };
 
       displayTideData(data);
@@ -436,8 +435,7 @@
         lowTides,
         sunrise: "--:--",
         sunset: "--:--",
-        moonrise: "--:--",
-        moonset: "--:--"
+
       };
 
       displayTideData(sampleData);
@@ -488,14 +486,7 @@
               <div class="info-label">🌇 일몰</div>
               <div class="info-value">${data.sunset}</div>
             </div>
-            <div class="info-item">
-              <div class="info-label">🌙 월출</div>
-              <div class="info-value">${data.moonrise}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">🌑 월몰</div>
-              <div class="info-value">${data.moonset}</div>
-            </div>
+
           </div>
         </div>
       `;
