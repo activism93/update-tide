@@ -456,7 +456,7 @@
       data.highTides.forEach((tide, index) => {
         tideHTML += `
           <div class="tide-item high-tide">
-            <div class="tide-icon">⬆️</div>
+            <div class="tide-icon">🌊🟦</div>
             <div class="tide-label">만조 ${index + 1}</div>
             <div class="tide-time">${tide.time}</div>
             <div class="tide-height">${tide.height}${tide.height !== "--" ? "cm" : ""}</div>
@@ -467,7 +467,7 @@
       data.lowTides.forEach((tide, index) => {
         tideHTML += `
           <div class="tide-item low-tide">
-            <div class="tide-icon">⬇️</div>
+            <div class="tide-icon">🌊▫️</div>
             <div class="tide-label">간조 ${index + 1}</div>
             <div class="tide-time">${tide.time}</div>
             <div class="tide-height">${tide.height}${tide.height !== "--" ? "cm" : ""}</div>
