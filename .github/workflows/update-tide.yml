@@ -27,9 +27,7 @@ jobs:
       - name: install deps
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4
-          pip install selenium
-
+          pip install requests beautifulsoup4 pytz
       - name: generate json
         env:
           TIDE_IDX: "162"
