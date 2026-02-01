@@ -2,8 +2,13 @@ name: update tide json
 
 on:
   schedule:
-    - cron: "5 15 * * *"
-  workflow_dispatch: {}
+    - cron: "0 0 * * *"  # 매일 자정 0시 (한국 서울시간)
+  workflow_dispatch: {}  # 수동 실행 가능
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/update_tide_json.py'
+      - '.github/workflows/update-tide.yml'
 
 permissions:
   contents: write
@@ -33,7 +38,11 @@ jobs:
           TIDE_IDX: "162"
           TIDE_STATION_NAME: "월곶포구"
           TZ: "Asia/Seoul"
+          PYTHONUNBUFFERED: "1"
         run: |
+          echo "🕐 Current time in Seoul timezone:"
+          date -d 'TZ="Asia/Seoul"' '+%Y-%m-%d %H:%M:%S %Z'
+          echo "📊 Starting tide data extraction..."
           python scripts/update_tide_json.py
 
       - name: commit & push if changed

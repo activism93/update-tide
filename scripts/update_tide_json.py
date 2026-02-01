@@ -135,7 +135,7 @@ def fetch_today_tide_data() -> Dict[str, Any]:
     }
     
     try:
-        print(f"Fetching today's tide data for {date_str}...")
+        print(f"Fetching tide data for {date_str} (Seoul Time: {seoul_time.strftime('%Y-%m-%d %H:%M:%S %Z')})...")
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
@@ -151,14 +151,14 @@ def fetch_today_tide_data() -> Dict[str, Any]:
             **tide_info
         }
         
-        print(f"  Extracted {len(result['high_tides'])} high tides, {len(result['low_tides'])} low tides")
+        print(f"  ✅ Extracted {len(result['high_tides'])} high tides, {len(result['low_tides'])} low tides")
         if result['sunrise']:
-            print(f"  Sunrise: {result['sunrise']}, Sunset: {result['sunset']}")
+            print(f"  🌅 Sunrise: {result['sunrise']}, 🌇 Sunset: {result['sunset']}")
         
         return result
         
     except Exception as e:
-        print(f"Error fetching today's tide data: {e}")
+        print(f"❌ Error fetching tide data for {date_str}: {e}")
         return {}
 
 def save_tide_json(data: Dict[str, Any]):
