@@ -582,7 +582,12 @@ def main():
     if len(sys.argv) >= 3:
         month = int(sys.argv[2])
     
+    # 항상 현재 날짜로 설정 (2026년 2월)
+    # year = 2026
+    # month = 2
+    
     print(f"물때 데이터 생성 시작: {year}-{month:02d}")
+    print(f"목표 연월: {year}-{month:02d}")
     
     try:
         # 반드시 실제 데이터를 가져와야 함
