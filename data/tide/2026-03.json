@@ -1,0 +1,548 @@
+{
+  "year": 2026,
+  "month": 3,
+  "data": {
+    "1": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        },
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [],
+      "moon_phase": "상현달",
+      "lunar_date": "삼월 3일"
+    },
+    "2": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        },
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [],
+      "moon_phase": "상현달",
+      "lunar_date": "삼월 5일"
+    },
+    "3": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        },
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [],
+      "moon_phase": "상현달",
+      "lunar_date": "삼월 7일"
+    },
+    "4": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        },
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [],
+      "moon_phase": "상현달",
+      "lunar_date": "삼월 9일"
+    },
+    "5": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        },
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [],
+      "moon_phase": "상현달",
+      "lunar_date": "삼월 11일"
+    },
+    "6": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        },
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [],
+      "moon_phase": "상현달",
+      "lunar_date": "삼월 13일"
+    },
+    "7": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        },
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [],
+      "moon_phase": "상현달",
+      "lunar_date": "삼월 15일"
+    },
+    "8": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "보름달",
+      "lunar_date": "삼월 17일"
+    },
+    "9": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "보름달",
+      "lunar_date": "삼월 19일"
+    },
+    "10": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "보름달",
+      "lunar_date": "삼월 21일"
+    },
+    "11": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "보름달",
+      "lunar_date": "삼월 23일"
+    },
+    "12": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "보름달",
+      "lunar_date": "삼월 25일"
+    },
+    "13": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "보름달",
+      "lunar_date": "삼월 27일"
+    },
+    "14": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "보름달",
+      "lunar_date": "삼월 29일"
+    },
+    "15": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "하현달",
+      "lunar_date": "사월 1일"
+    },
+    "16": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "하현달",
+      "lunar_date": "사월 3일"
+    },
+    "17": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "하현달",
+      "lunar_date": "사월 5일"
+    },
+    "18": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "하현달",
+      "lunar_date": "사월 7일"
+    },
+    "19": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "하현달",
+      "lunar_date": "사월 9일"
+    },
+    "20": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "하현달",
+      "lunar_date": "사월 11일"
+    },
+    "21": {
+      "high_tides": [
+        {
+          "time": "04:20",
+          "type": "high",
+          "height": "698",
+          "level": "사리"
+        },
+        {
+          "time": "16:57",
+          "type": "high",
+          "height": "843",
+          "level": "사리"
+        }
+      ],
+      "low_tides": [
+        {
+          "time": "23:23",
+          "type": "low",
+          "height": "111",
+          "level": "사리"
+        }
+      ],
+      "moon_phase": "하현달",
+      "lunar_date": "사월 13일"
+    }
+  },
+  "last_updated": "2026-02-01T17:21:41.975303",
+  "source": "badatime.com",
+  "location": "월곶포구"
+}
