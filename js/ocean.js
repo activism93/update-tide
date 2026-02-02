@@ -6,6 +6,23 @@ const TOMORROW_JSON_PATH = "./data/tide_tomorrow.json";
 const FALLBACK_JSON_PATH = "./data/tide.json";
 
 let lastOceanData = null;
+let isFetching = false;
+let minuteTickIntervalId = null;
+let minuteTickTimeoutId = null;
+let lastKstDateKey = null;
+
+const kstTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    hour: '2-digit',
+    minute: '2-digit'
+});
+
+const kstDateKeyFormatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+});
 
 function pad2(n) { return String(n).padStart(2, "0"); }
 
@@ -189,6 +206,7 @@ async function loadOceanData(forceReload = false) {
   container.innerHTML = '<div class="loading">🌊 오션 정보를 불러오는 중...</div>';
 
   try {
+    isFetching = true;
     const ts = Date.now();
     const todayUrl = `${TODAY_JSON_PATH}?ts=${ts}`;
     const tomorrowUrl = `${TOMORROW_JSON_PATH}?ts=${ts}`;
@@ -217,6 +235,7 @@ async function loadOceanData(forceReload = false) {
     console.log("오션 데이터 로딩 실패:", e);
     // Fallback: legacy single file
     try {
+        isFetching = true;
         const url = `${FALLBACK_JSON_PATH}?ts=${Date.now()}`;
         const resp = await fetch(url, { cache: "no-store" });
         if (!resp.ok) throw new Error(`JSON fetch failed: HTTP ${resp.status} (${url})`);
@@ -226,7 +245,11 @@ async function loadOceanData(forceReload = false) {
     } catch (e2) {
         showFriendlyError(e);
         displaySampleOceanData();
+    } finally {
+        isFetching = false;
     }
+  } finally {
+    isFetching = false;
   }
 }
     
@@ -253,7 +276,7 @@ function displayOceanData(todayData, tomorrowData) {
   
   const data = {
     date: dateStr,
-    currentTime: now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+    currentTime: kstTimeFormatter.format(new Date()),
     highTides: Array.isArray(todayHigh) && todayHigh.length ? todayHigh : [],
     lowTides: Array.isArray(todayLow) && todayLow.length ? todayLow : [],
     sunrise: (todayData && todayData.sunrise) || "--:--",
@@ -263,6 +286,86 @@ function displayOceanData(todayData, tomorrowData) {
   };
 
   displayOceanOverview(data);
+}
+
+function computeTideLevelFromCache() {
+    if (!lastOceanData || !lastOceanData.today) return null;
+
+    const todayData = lastOceanData.today;
+    const tomorrowData = lastOceanData.tomorrow;
+
+    const todayHigh = (todayData && todayData.high_tides) || [];
+    const todayLow = (todayData && todayData.low_tides) || [];
+    const tomorrowHigh = (tomorrowData && tomorrowData.high_tides) || [];
+    const tomorrowLow = (tomorrowData && tomorrowData.low_tides) || [];
+
+    const tideEvents = [
+        ...buildTideEvents(todayHigh, todayLow, 0),
+        ...buildTideEvents(tomorrowHigh, tomorrowLow, 1)
+    ];
+
+    return calculateCurrentTideLevel(tideEvents);
+}
+
+function updateMinuteIndicators() {
+    // Update date rollover first
+    const dateKey = kstDateKeyFormatter.format(new Date());
+    if (lastKstDateKey && dateKey !== lastKstDateKey) {
+        lastKstDateKey = dateKey;
+        // Immediately fetch fresh files on midnight rollover
+        loadOceanData(true);
+        return;
+    }
+
+    // Avoid fighting with the loading state
+    if (isFetching) return;
+
+    const timeEl = document.getElementById('oceanCurrentTime');
+    if (timeEl) {
+        timeEl.textContent = kstTimeFormatter.format(new Date());
+    }
+
+    const tideLevel = computeTideLevelFromCache();
+    if (!tideLevel) return;
+
+    const pctEl = document.getElementById('oceanTidePercentage');
+    if (pctEl) {
+        pctEl.textContent = `${tideLevel.percentage}%`;
+    }
+
+    const nextEl = document.getElementById('oceanTideNextLine');
+    if (nextEl) {
+        nextEl.textContent = `${tideLevel.status} · 다음 ${tideLevel.nextTide.displayTime || tideLevel.nextTide.time || '--:--'}`;
+    }
+
+    // Sun status changes minute-by-minute around sunrise/sunset
+    const todayData = lastOceanData.today;
+    const sun = getSunStatus(todayData && todayData.sunrise, todayData && todayData.sunset);
+
+    const sunIconEl = document.getElementById('oceanSunIcon');
+    if (sunIconEl) sunIconEl.textContent = sun.icon;
+    const sunStatusEl = document.getElementById('oceanSunStatus');
+    if (sunStatusEl) sunStatusEl.textContent = sun.status;
+    const sunTimeEl = document.getElementById('oceanSunTime');
+    if (sunTimeEl) sunTimeEl.textContent = sun.time;
+}
+
+function startMinuteTicker() {
+    if (minuteTickTimeoutId) {
+        clearTimeout(minuteTickTimeoutId);
+        minuteTickTimeoutId = null;
+    }
+    if (minuteTickIntervalId) {
+        clearInterval(minuteTickIntervalId);
+        minuteTickIntervalId = null;
+    }
+
+    const now = new Date();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 25;
+    minuteTickTimeoutId = setTimeout(() => {
+        updateMinuteIndicators();
+        minuteTickIntervalId = setInterval(updateMinuteIndicators, 60 * 1000);
+    }, Math.max(0, msUntilNextMinute));
 }
 
 function showFriendlyError(err) {
@@ -323,23 +426,23 @@ function displayOceanOverview(data) {
     <div class="ocean-overview">
       <div class="current-status">
         <div class="status-time">
-          <div class="current-time">${data.currentTime}</div>
-          <div class="current-date">${data.date}</div>
+          <div class="current-time" id="oceanCurrentTime">${data.currentTime}</div>
+          <div class="current-date" id="oceanCurrentDate">${data.date}</div>
         </div>
         
         <div class="tide-level-indicator">
           <div class="tide-wave"></div>
-          <div class="tide-percentage">${data.tideLevel.percentage}%</div>
+          <div class="tide-percentage" id="oceanTidePercentage">${data.tideLevel.percentage}%</div>
           <div class="tide-level-text">현재 조수 레벨</div>
-          <div style="font-size: 1em; color: #7f8c8d; margin-top: 5px;">
+          <div style="font-size: 1em; color: #7f8c8d; margin-top: 5px;" id="oceanTideNextLine">
             ${data.tideLevel.status} · 다음 ${data.tideLevel.nextTide.displayTime || data.tideLevel.nextTide.time || '--:--'}
           </div>
         </div>
         
         <div class="sun-position">
-          <div class="sun-icon">${data.sunStatus.icon}</div>
-          <div class="sun-status">${data.sunStatus.status}</div>
-          <div class="sun-time">${data.sunStatus.time}</div>
+          <div class="sun-icon" id="oceanSunIcon">${data.sunStatus.icon}</div>
+          <div class="sun-status" id="oceanSunStatus">${data.sunStatus.status}</div>
+          <div class="sun-time" id="oceanSunTime">${data.sunStatus.time}</div>
         </div>
       </div>
       
@@ -404,7 +507,9 @@ function displayOceanOverview(data) {
 
 // 초기 로드 및 주기적 업데이트
 document.addEventListener('DOMContentLoaded', function() {
+    lastKstDateKey = kstDateKeyFormatter.format(new Date());
     loadOceanData(false);
+    startMinuteTicker();
     
     // 5분마다 자동 새로고침
     setInterval(() => {
