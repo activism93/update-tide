@@ -137,7 +137,7 @@ async function loadOceanData(forceReload = false) {
   container.innerHTML = '<div class="loading">🌊 오션 정보를 불러오는 중...</div>';
 
   try {
-    const url = `${JSON_PATH}?ts=${Date.now()}`;
+    const url = `${JSON_PATH}?ts=${Date.now()}&v=2.0`;
     console.log("Loading ocean data from:", url);
     
     const resp = await fetch(url, { cache: "no-store" });
@@ -332,3 +332,9 @@ document.addEventListener('DOMContentLoaded', function() {
         loadOceanData(true);
     }, 5 * 60 * 1000);
 });
+
+// 강제 새로고침 함수
+function forceRefresh() {
+    console.log("Force refreshing ocean data...");
+    loadOceanData(true);
+}

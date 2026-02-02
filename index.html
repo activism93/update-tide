@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>월곶 이레하이니스 - 오션 정보</title>
-    <link rel="stylesheet" href="styles/ocean.css?v=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="styles/ocean.css?v=2.0">
 </head>
 <body>
     <div class="container">
@@ -13,6 +16,7 @@
             <div class="subtitle">넓은 통창으로 보는 오션의 정보</div>
             <div class="building-info">월곶포구 실시간 조수 정보</div>
             <button class="refresh-btn" onclick="loadOceanData(true)">🔄 정보 새로고침</button>
+            <button class="refresh-btn" onclick="forceRefresh()" style="margin-left: 10px;">🔥 강제 새로고침</button>
         </div>
 
         <div id="oceanContainer" class="loading">
