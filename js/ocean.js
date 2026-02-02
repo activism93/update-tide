@@ -20,7 +20,7 @@ function kstNow() {
 
 function calculateCurrentTideLevel(highTides, lowTides) {
     const now = kstNow();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    let currentMinutes = now.getHours() * 60 + now.getMinutes();
     
     // 모든 조수 시간을 분으로 변환
     const allTides = [];
@@ -283,16 +283,19 @@ function displayOceanOverview(data) {
   });
 
   allTides.forEach(tide => {
-    const tideIcon = tide.type === 'high' ? '🔺' : '🔻'; // 붉은색 만조, 파란색 간조
+    const tideSymbol = tide.type === 'high' ? '▲' : '▼';
+    const tideIconClass = tide.type === 'high' ? 'tide-icon-high' : 'tide-icon-low';
+
     oceanHTML += `
       <div class="tide-event ${tide.type}-tide">
-        <div class="tide-icon">${tideIcon}</div>
+        <div class="tide-icon ${tideIconClass}">${tideSymbol}</div>
         <div class="tide-type">${tide.label}</div>
         <div class="tide-time">${tide.time}</div>
         <div class="tide-height">${tide.height}cm</div>
       </div>
     `;
   });
+
 
   oceanHTML += `
       </div>
