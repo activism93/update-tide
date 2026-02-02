@@ -1,5 +1,10 @@
 // Ocean View - 월곶 이레하이니스 JavaScript
-const JSON_PATH = "./data/tide.json";
+// Two-day JSON files are used to compute tide level across midnight.
+const TODAY_JSON_PATH = "./data/tide_today.json";
+const TOMORROW_JSON_PATH = "./data/tide_tomorrow.json";
+// Backward-compatible fallback
+const FALLBACK_JSON_PATH = "./data/tide.json";
+
 let lastOceanData = null;
 
 function pad2(n) { return String(n).padStart(2, "0"); }
@@ -18,94 +23,141 @@ function kstNow() {
   return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}+09:00`);
 }
 
-function calculateCurrentTideLevel(highTides, lowTides) {
+function timeToMinutes(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string') return null;
+    const parts = timeStr.split(':');
+    if (parts.length !== 2) return null;
+    const h = Number(parts[0]);
+    const m = Number(parts[1]);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+    if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+    return h * 60 + m;
+}
+
+function buildTideEvents(highTides, lowTides, dayOffset) {
+    const events = [];
+
+    (highTides || []).forEach(tide => {
+        const minutes = timeToMinutes(tide.time);
+        const height = Number(tide.height);
+        if (minutes == null || !Number.isFinite(height)) return;
+        events.push({
+            time: tide.time,
+            minutes,
+            absMinutes: dayOffset * 1440 + minutes,
+            height,
+            type: 'high',
+            dayOffset
+        });
+    });
+
+    (lowTides || []).forEach(tide => {
+        const minutes = timeToMinutes(tide.time);
+        const height = Number(tide.height);
+        if (minutes == null || !Number.isFinite(height)) return;
+        events.push({
+            time: tide.time,
+            minutes,
+            absMinutes: dayOffset * 1440 + minutes,
+            height,
+            type: 'low',
+            dayOffset
+        });
+    });
+
+    return events;
+}
+
+function calculateCurrentTideLevel(tideEvents) {
     const now = kstNow();
-    let currentMinutes = now.getHours() * 60 + now.getMinutes();
-    
-    // 모든 조수 시간을 분으로 변환
-    const allTides = [];
-    
-    highTides.forEach(tide => {
-        const [hours, minutes] = tide.time.split(':').map(Number);
-        allTides.push({
-            time: tide.time,
-            minutes: hours * 60 + minutes,
-            height: tide.height,
-            type: 'high'
-        });
-    });
-    
-    lowTides.forEach(tide => {
-        const [hours, minutes] = tide.time.split(':').map(Number);
-        allTides.push({
-            time: tide.time,
-            minutes: hours * 60 + minutes,
-            height: tide.height,
-            type: 'low'
-        });
-    });
-    
-    // 시간순 정렬
-    allTides.sort((a, b) => a.minutes - b.minutes);
-    
-    // 현재 시간 기준으로 다음 조수 찾기
-    let nextTide = null;
-    let prevTide = null;
-    
-    for (let i = 0; i < allTides.length; i++) {
-        if (allTides[i].minutes > currentMinutes) {
-            nextTide = allTides[i];
-            prevTide = i > 0 ? allTides[i - 1] : allTides[allTides.length - 1];
+    const currentAbsMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const events = (tideEvents || [])
+        .filter(e => e && Number.isFinite(e.absMinutes) && Number.isFinite(e.height))
+        .slice()
+        .sort((a, b) => a.absMinutes - b.absMinutes);
+
+    if (events.length < 2) {
+        return {
+            percentage: 50,
+            currentHeight: 0,
+            status: '알 수 없음',
+            nextTide: { time: '--:--', displayTime: '--:--', type: 'unknown' },
+            timeToNext: 0
+        };
+    }
+
+    // Find next tide strictly after now
+    let next = events.find(e => e.absMinutes > currentAbsMinutes);
+    if (!next) {
+        // If we don't have tomorrow data, fall back to first event and treat it as next day
+        const first = events[0];
+        next = { ...first, absMinutes: first.absMinutes + 1440, dayOffset: (first.dayOffset || 0) + 1 };
+    }
+
+    // Find previous tide at/before now
+    let prev = null;
+    for (let i = events.length - 1; i >= 0; i--) {
+        if (events[i].absMinutes <= currentAbsMinutes) {
+            prev = events[i];
             break;
         }
     }
-    
-    // 현재 시간이 마지막 조수보다 늦은 경우
-    if (!nextTide) {
-        nextTide = allTides[0];
-        prevTide = allTides[allTides.length - 1];
-    }
-    
-    // 현재 조수 레벨 계산 (간단한 선형 보간)
-    if (prevTide && nextTide) {
-        let prevMinutes = prevTide.minutes;
-        let nextMinutes = nextTide.minutes;
-        
-        // 자정을 넘어가는 경우 처리
-        if (nextMinutes < prevMinutes) {
-            nextMinutes += 24 * 60;
-            if (currentMinutes < prevMinutes) {
-                currentMinutes += 24 * 60;
-            }
+
+    if (!prev) {
+        // Before the first tide of today: approximate prev as last tide of today but shifted to previous day.
+        const todayEvents = events.filter(e => e.dayOffset === 0);
+        if (todayEvents.length > 0) {
+            const lastToday = todayEvents[todayEvents.length - 1];
+            prev = { ...lastToday, absMinutes: lastToday.absMinutes - 1440, dayOffset: -1 };
+        } else {
+            prev = events[0];
         }
-        
-        const totalMinutes = nextMinutes - prevMinutes;
-        const elapsedMinutes = currentMinutes - prevMinutes;
-        const progress = elapsedMinutes / totalMinutes;
-        
-        // 높이 보간
-        const currentHeight = prevTide.height + (nextTide.height - prevTide.height) * progress;
-        
-        // 퍼센트 계산 (최저/최고 기준)
-        const minHeight = Math.min(...allTides.map(t => t.height));
-        const maxHeight = Math.max(...allTides.map(t => t.height));
-        const percentage = ((currentHeight - minHeight) / (maxHeight - minHeight)) * 100;
-        
-        return {
-            percentage: Math.round(percentage),
-            currentHeight: Math.round(currentHeight),
-            status: progress > 0.5 ? '오름' : '내림',
-            nextTide: nextTide,
-            timeToNext: nextMinutes - currentMinutes
-        };
     }
-    
+
+    let prevAbs = prev.absMinutes;
+    let nextAbs = next.absMinutes;
+    if (nextAbs <= prevAbs) {
+        nextAbs += 1440;
+    }
+
+    const total = Math.max(1, nextAbs - prevAbs);
+    const elapsed = Math.min(total, Math.max(0, currentAbsMinutes - prevAbs));
+    const progress = elapsed / total;
+
+    const currentHeight = prev.height + (next.height - prev.height) * progress;
+
+    // Percent: 0 = low, 100 = high within the current segment.
+    let percentage = 50;
+    let status = next.height >= prev.height ? '오름' : '내림';
+
+    if (prev.type === 'low' && next.type === 'high') {
+        percentage = progress * 100;
+        status = '오름';
+    } else if (prev.type === 'high' && next.type === 'low') {
+        percentage = (1 - progress) * 100;
+        status = '내림';
+    } else {
+        const minH = Math.min(prev.height, next.height);
+        const maxH = Math.max(prev.height, next.height);
+        percentage = maxH > minH ? ((currentHeight - minH) / (maxH - minH)) * 100 : 50;
+    }
+
+    const isTomorrow = (next.dayOffset || 0) >= 1;
+    const nextDisplay = `${isTomorrow ? '내일 ' : ''}${next.time}`;
+
     return {
-        percentage: 50,
-        currentHeight: 0,
-        status: '알 수 없음',
-        nextTide: nextTide,
-        timeToNext: 0
+        percentage: Math.round(Math.max(0, Math.min(100, percentage))),
+        currentHeight: Math.round(currentHeight),
+        status,
+        nextTide: {
+            time: next.time,
+            displayTime: nextDisplay,
+            height: next.height,
+            type: next.type,
+            dayOffset: next.dayOffset
+        },
+        timeToNext: Math.max(0, Math.round(nextAbs - currentAbsMinutes))
     };
 }
 
@@ -137,48 +189,75 @@ async function loadOceanData(forceReload = false) {
   container.innerHTML = '<div class="loading">🌊 오션 정보를 불러오는 중...</div>';
 
   try {
-    const url = `${JSON_PATH}?ts=${Date.now()}&v=2.0`;
-    console.log("Loading ocean data from:", url);
-    
-    const resp = await fetch(url, { cache: "no-store" });
-    if (!resp.ok) {
-      throw new Error(`JSON fetch failed: HTTP ${resp.status} (${url})`);
+    const ts = Date.now();
+    const todayUrl = `${TODAY_JSON_PATH}?ts=${ts}`;
+    const tomorrowUrl = `${TOMORROW_JSON_PATH}?ts=${ts}`;
+
+    console.log("Loading ocean data from:", todayUrl, tomorrowUrl);
+
+    const [todayResp, tomorrowResp] = await Promise.all([
+        fetch(todayUrl, { cache: "no-store" }),
+        fetch(tomorrowUrl, { cache: "no-store" })
+    ]);
+
+    if (!todayResp.ok) {
+        throw new Error(`JSON fetch failed: HTTP ${todayResp.status} (${todayUrl})`);
     }
 
-    const oceanData = await resp.json();
-    console.log("Loaded ocean data:", oceanData);
-    lastOceanData = oceanData;
-    
-    displayOceanData(oceanData);
+    const todayData = await todayResp.json();
+    const tomorrowData = tomorrowResp.ok ? await tomorrowResp.json() : null;
+
+    console.log("Loaded today data:", todayData);
+    if (tomorrowData) console.log("Loaded tomorrow data:", tomorrowData);
+
+    lastOceanData = { today: todayData, tomorrow: tomorrowData };
+
+    displayOceanData(todayData, tomorrowData);
   } catch (e) {
     console.log("오션 데이터 로딩 실패:", e);
-    showFriendlyError(e);
-    displaySampleOceanData();
+    // Fallback: legacy single file
+    try {
+        const url = `${FALLBACK_JSON_PATH}?ts=${Date.now()}`;
+        const resp = await fetch(url, { cache: "no-store" });
+        if (!resp.ok) throw new Error(`JSON fetch failed: HTTP ${resp.status} (${url})`);
+        const legacyData = await resp.json();
+        lastOceanData = { today: legacyData, tomorrow: null };
+        displayOceanData(legacyData, null);
+    } catch (e2) {
+        showFriendlyError(e);
+        displaySampleOceanData();
+    }
   }
 }
     
-function displayOceanData(oceanData) {
+function displayOceanData(todayData, tomorrowData) {
   const now = kstNow();
   const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
   
-  const dateStr = oceanData.korean_date || `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${weekdays[now.getDay()]})`;
+  const dateStr = (todayData && todayData.korean_date) || `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${weekdays[now.getDay()]})`;
   
-  // 현재 조수 상태 계산
-  const tideLevel = calculateCurrentTideLevel(
-      oceanData.high_tides || [], 
-      oceanData.low_tides || []
-  );
+  const todayHigh = (todayData && todayData.high_tides) || [];
+  const todayLow = (todayData && todayData.low_tides) || [];
+  const tomorrowHigh = (tomorrowData && tomorrowData.high_tides) || [];
+  const tomorrowLow = (tomorrowData && tomorrowData.low_tides) || [];
+
+  // 현재 조수 상태 계산 (오늘 + 내일 데이터 기반)
+  const tideEvents = [
+      ...buildTideEvents(todayHigh, todayLow, 0),
+      ...buildTideEvents(tomorrowHigh, tomorrowLow, 1)
+  ];
+  const tideLevel = calculateCurrentTideLevel(tideEvents);
   
   // 해 상태 계산
-  const sunStatus = getSunStatus(oceanData.sunrise, oceanData.sunset);
+  const sunStatus = getSunStatus(todayData && todayData.sunrise, todayData && todayData.sunset);
   
   const data = {
     date: dateStr,
     currentTime: now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-    highTides: Array.isArray(oceanData.high_tides) && oceanData.high_tides.length ? oceanData.high_tides : [],
-    lowTides: Array.isArray(oceanData.low_tides) && oceanData.low_tides.length ? oceanData.low_tides : [],
-    sunrise: oceanData.sunrise || "--:--",
-    sunset: oceanData.sunset || "--:--",
+    highTides: Array.isArray(todayHigh) && todayHigh.length ? todayHigh : [],
+    lowTides: Array.isArray(todayLow) && todayLow.length ? todayLow : [],
+    sunrise: (todayData && todayData.sunrise) || "--:--",
+    sunset: (todayData && todayData.sunset) || "--:--",
     tideLevel: tideLevel,
     sunStatus: sunStatus
   };
@@ -253,7 +332,7 @@ function displayOceanOverview(data) {
           <div class="tide-percentage">${data.tideLevel.percentage}%</div>
           <div class="tide-level-text">현재 조수 레벨</div>
           <div style="font-size: 1em; color: #7f8c8d; margin-top: 5px;">
-            ${data.tideLevel.status} · 다음 ${data.tideLevel.nextTide.time}
+            ${data.tideLevel.status} · 다음 ${data.tideLevel.nextTide.displayTime || data.tideLevel.nextTide.time || '--:--'}
           </div>
         </div>
         

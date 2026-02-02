@@ -8,7 +8,7 @@ import json
 import sys
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta, date
 import pytz
 from bs4 import BeautifulSoup
 import re
@@ -34,11 +34,12 @@ def extract_tide_info(html_content: str) -> Dict[str, Any]:
     
     # Method 1: Extract using table structure patterns
     # Pattern for 만조 (high tide) section
-    high_pattern = r'만조.*?((?:\d{1,2}:\d{2}\s*\(\s*\d+\s*\).*?)+)'
+    # Heights can be negative on some days (e.g. -22)
+    high_pattern = r'만조.*?((?:\d{1,2}:\d{2}\s*\(\s*[+-]?\d+\s*\).*?)+)'
     high_match = re.search(high_pattern, text_content, re.DOTALL)
     if high_match:
         high_section = high_match.group(1)
-        high_time_pattern = r'(\d{1,2}:\d{2})\s*\(\s*(\d+)\s*\)'
+        high_time_pattern = r'(\d{1,2}:\d{2})\s*\(\s*([+-]?\d+)\s*\)'
         high_matches = re.findall(high_time_pattern, high_section)
         
         for time_str, height_str in high_matches[:2]:
@@ -52,11 +53,11 @@ def extract_tide_info(html_content: str) -> Dict[str, Any]:
                 continue
     
     # Pattern for 간조 (low tide) section
-    low_pattern = r'간조.*?((?:\d{1,2}:\d{2}\s*\(\s*\d+\s*\).*?)+)'
+    low_pattern = r'간조.*?((?:\d{1,2}:\d{2}\s*\(\s*[+-]?\d+\s*\).*?)+)'
     low_match = re.search(low_pattern, text_content, re.DOTALL)
     if low_match:
         low_section = low_match.group(1)
-        low_time_pattern = r'(\d{1,2}:\d{2})\s*\(\s*(\d+)\s*\)'
+        low_time_pattern = r'(\d{1,2}:\d{2})\s*\(\s*([+-]?\d+)\s*\)'
         low_matches = re.findall(low_time_pattern, low_section)
         
         for time_str, height_str in low_matches[:2]:
@@ -79,7 +80,7 @@ def extract_tide_info(html_content: str) -> Dict[str, Any]:
     # Method 2: Fallback using global patterns if specific sections didn't work
     if len(result['high_tides']) < 2:
         # Alternative: find all patterns with ▲ symbols
-        global_high_pattern = r'(\d{1,2}:\d{2})\s*\(\s*(\d+)\s*\)[^▲]*▲'
+        global_high_pattern = r'(\d{1,2}:\d{2})\s*\(\s*([+-]?\d+)\s*\)[^▲]*▲'
         high_matches = re.findall(global_high_pattern, text_content)
         
         for time_str, height_str in high_matches[:2]:
@@ -96,7 +97,7 @@ def extract_tide_info(html_content: str) -> Dict[str, Any]:
     
     if len(result['low_tides']) < 2:
         # Alternative: find all patterns with ▼ symbols  
-        global_low_pattern = r'(\d{1,2}:\d{2})\s*\(\s*(\d+)\s*\)[^▼]*▼'
+        global_low_pattern = r'(\d{1,2}:\d{2})\s*\(\s*([+-]?\d+)\s*\)[^▼]*▼'
         low_matches = re.findall(global_low_pattern, text_content)
         
         for time_str, height_str in low_matches[:2]:
@@ -117,56 +118,55 @@ def extract_tide_info(html_content: str) -> Dict[str, Any]:
     
     return result
 
-def fetch_today_tide_data() -> Dict[str, Any]:
-    """
-    Fetch today's tide data from badatime.com
-    
-    Returns:
-        Dictionary with today's tide data
-    """
-    seoul_time = get_seoul_time()
-    date_str = seoul_time.strftime('%Y-%m-%d')
-    
-    # 월곶포구 URL (idx=162)
-    url = f"https://m.badatime.com/view_day.jsp?idx=162-{date_str}"
-    
+def fetch_tide_data_for_date(target_date: date, *, seoul_time: datetime) -> Dict[str, Any]:
+    """Fetch tide data for a specific date (KST 기준)"""
+    date_str = target_date.strftime('%Y-%m-%d')
+    cdate = f"{target_date.year}-{target_date.month}-{target_date.day}"  # badatime uses non-zero-padded links
+
+    # 월곶포구 URL (idx=162) - cdate 파라미터로 날짜 지정
+    url = f"https://m.badatime.com/view_day.jsp?idx=162&cdate={cdate}"
+
     headers = {
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1'
     }
-    
+
     try:
         print(f"Fetching tide data for {date_str} (Seoul Time: {seoul_time.strftime('%Y-%m-%d %H:%M:%S %Z')})...")
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
-        
+
         tide_info = extract_tide_info(response.text)
-        
+
+        # weekday/korean_date는 target_date 기준으로 생성
+        seoul_tz = pytz.timezone('Asia/Seoul')
+        target_dt = seoul_tz.localize(datetime(target_date.year, target_date.month, target_date.day))
+
         result = {
             'date': date_str,
-            'korean_date': seoul_time.strftime('%Y년 %m월 %d일'),
-            'weekday': seoul_time.strftime('%A'),
+            'korean_date': f"{target_date.year}년 {target_date.month:02d}월 {target_date.day:02d}일",
+            'weekday': target_dt.strftime('%A'),
             'location': '월곶포구',
             'source': 'badatime.com',
             'last_updated': seoul_time.isoformat(),
             **tide_info
         }
-        
+
         print(f"  ✅ Extracted {len(result['high_tides'])} high tides, {len(result['low_tides'])} low tides")
         if result['sunrise']:
             print(f"  🌅 Sunrise: {result['sunrise']}, 🌇 Sunset: {result['sunset']}")
-        
+
         return result
-        
+
     except Exception as e:
         print(f"❌ Error fetching tide data for {date_str}: {e}")
         return {}
 
-def save_tide_json(data: Dict[str, Any]):
-    """Save today's tide data to single JSON file"""
+def save_tide_json(data: Dict[str, Any], filename: str):
+    """Save tide data to JSON file under data/"""
     output_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
     os.makedirs(output_dir, exist_ok=True)
-    
-    filepath = os.path.join(output_dir, 'tide.json')
+
+    filepath = os.path.join(output_dir, filename)
     
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -177,17 +177,27 @@ def save_tide_json(data: Dict[str, Any]):
         sys.exit(1)
 
 def main():
-    """Main function to update today's tide data"""
+    """Main function to update tide data files"""
     try:
-        # Fetch today's tide data
-        today_data = fetch_today_tide_data()
-        
-        if today_data:
-            save_tide_json(today_data)
-            print("Today's tide data update completed successfully!")
-        else:
-            print("Failed to fetch tide data")
+        seoul_time = get_seoul_time()
+        today = seoul_time.date()
+        tomorrow = today + timedelta(days=1)
+
+        today_data = fetch_tide_data_for_date(today, seoul_time=seoul_time)
+        tomorrow_data = fetch_tide_data_for_date(tomorrow, seoul_time=seoul_time)
+
+        if not today_data or not tomorrow_data:
+            print("Failed to fetch tide data for today/tomorrow")
             sys.exit(1)
+
+        # New format: split into two files for better tide-level calculation across midnight
+        save_tide_json(today_data, 'tide_today.json')
+        save_tide_json(tomorrow_data, 'tide_tomorrow.json')
+
+        # Backward-compatible alias
+        save_tide_json(today_data, 'tide.json')
+
+        print("Tide data update completed successfully!")
         
     except Exception as e:
         print(f"Error in main execution: {e}")

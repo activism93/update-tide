@@ -2,7 +2,8 @@ name: update tide json
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # 매일 자정 0시 (한국 서울시간)
+    # GitHub Actions cron is UTC. 15:00 UTC = 00:00 KST.
+    - cron: "0 15 * * *"  # 매일 00:00 KST
   workflow_dispatch: {}  # 수동 실행 가능
   push:
     branches: [ main ]
@@ -41,7 +42,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           echo "🕐 Current time in Seoul timezone:"
-          date -d 'TZ="Asia/Seoul"' '+%Y-%m-%d %H:%M:%S %Z'
+          TZ="Asia/Seoul" date '+%Y-%m-%d %H:%M:%S %Z'
           echo "📊 Starting tide data extraction..."
           python scripts/update_tide_json.py
 
@@ -50,18 +51,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Check if there are any changes
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "Changes detected, committing..."
-            git add data/tide.json
-            # Check if there's actually anything to commit after adding
-            if [ -n "$(git diff --cached --name-only)" ]; then
-              git commit -m "chore: update today's tide data"
-              git push
-              echo "Changes pushed successfully"
-            else
-              echo "No changes to commit after adding files"
-            fi
-          else
+          git add data/tide_today.json data/tide_tomorrow.json data/tide.json
+
+          if git diff --cached --quiet; then
             echo "No changes detected"
+            exit 0
           fi
+
+          git commit -m "chore: update tide json"
+          git push
