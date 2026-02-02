@@ -194,7 +194,14 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 10px;
-    color: #7f8c8d;
+}
+
+.tide-event.high-tide .tide-type {
+    color: #e74c3c; /* 붉은색 - 만조 */
+}
+
+.tide-event.low-tide .tide-type {
+    color: #3498db; /* 파란색 - 간조 */
 }
 
 .tide-time {
@@ -202,6 +209,12 @@ body {
     font-weight: 300;
     color: #2c3e50;
     margin-bottom: 8px;
+}
+
+.tide-icon {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    display: block;
 }
 
 .tide-height {

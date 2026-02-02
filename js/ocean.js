@@ -283,8 +283,10 @@ function displayOceanOverview(data) {
   });
 
   allTides.forEach(tide => {
+    const tideIcon = tide.type === 'high' ? '🔺' : '🔻'; // 붉은색 만조, 파란색 간조
     oceanHTML += `
       <div class="tide-event ${tide.type}-tide">
+        <div class="tide-icon">${tideIcon}</div>
         <div class="tide-type">${tide.label}</div>
         <div class="tide-time">${tide.time}</div>
         <div class="tide-height">${tide.height}cm</div>
