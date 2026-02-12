@@ -1,4 +1,4 @@
-/* Ocean View - 월곶 이레하이니스 스타일 - Version 2.1 */
+/* Ocean View - 월곶 이레하이니스 스타일 - Version 2.2 */
 html, body {
     height: 100%;
 }
@@ -207,11 +207,11 @@ body {
 }
 
 .tide-type {
-    font-size: 0.9em;
-    font-weight: 600;
+    font-size: clamp(1.05rem, 0.9rem + 0.55vw, 1.4rem);
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
 }
 
 .tide-event.high-tide .tide-type {
@@ -242,7 +242,7 @@ body {
 
 .tide-icon {
     font-size: 2.5em;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     display: block;
 }
 
