@@ -1,4 +1,4 @@
-/* Ocean View - 월곶 이레하이니스 스타일 - Version 2.2 */
+/* Ocean View - 월곶 이레하이니스 스타일 - Version 2.4 */
 html, body {
     height: 100%;
 }
@@ -113,14 +113,28 @@ body {
 .tide-wave {
     width: 100%;
     height: 120px;
-    background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
-    border-radius: 60px 60px 0 0;
+    /* Container shows full range; inner fill animates with current level */
+    background: linear-gradient(180deg, rgba(52, 152, 219, 0.18) 0%, rgba(41, 128, 185, 0.08) 100%);
+    border-radius: 60px;
     position: relative;
     overflow: hidden;
-    box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1);
+    border: 1px solid rgba(41, 128, 185, 0.18);
+    box-shadow: inset 0 -10px 18px rgba(0,0,0,0.08);
+    --tide-fill: 50%;
 }
 
-.tide-wave::before {
+.tide-water {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--tide-fill);
+    background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+    transition: height 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: height;
+}
+
+.tide-water::before {
     content: '';
     position: absolute;
     top: 0;
@@ -129,6 +143,17 @@ body {
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
     animation: wave 3s linear infinite;
+}
+
+.tide-water::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 100%);
+    opacity: 0.65;
 }
 
 .tide-level-text {
@@ -184,6 +209,14 @@ body {
     overflow: hidden;
 }
 
+.tide-head {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
 .tide-event::before {
     content: '';
     position: absolute;
@@ -207,11 +240,11 @@ body {
 }
 
 .tide-type {
-    font-size: clamp(1.05rem, 0.9rem + 0.55vw, 1.4rem);
-    font-weight: 800;
+    font-size: clamp(1.25rem, 1.05rem + 0.75vw, 1.75rem);
+    font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 6px;
+    letter-spacing: 0.4px;
+    margin: 0;
 }
 
 .tide-event.high-tide .tide-type {
@@ -241,9 +274,10 @@ body {
 
 
 .tide-icon {
-    font-size: 2.5em;
-    margin-bottom: 6px;
-    display: block;
+    font-size: 1.6em;
+    line-height: 1;
+    margin: 0;
+    display: inline-block;
 }
 
 .tide-height {

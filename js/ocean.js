@@ -333,6 +333,11 @@ function updateMinuteIndicators() {
         pctEl.textContent = `${tideLevel.percentage}%`;
     }
 
+    const waveEl = document.getElementById('oceanTideWave');
+    if (waveEl) {
+        waveEl.style.setProperty('--tide-fill', `${tideLevel.percentage}%`);
+    }
+
     const nextEl = document.getElementById('oceanTideNextLine');
     if (nextEl) {
         nextEl.textContent = `${tideLevel.status} · 다음 ${tideLevel.nextTide.displayTime || tideLevel.nextTide.time || '--:--'}`;
@@ -431,7 +436,9 @@ function displayOceanOverview(data) {
         </div>
         
         <div class="tide-level-indicator">
-          <div class="tide-wave"></div>
+          <div class="tide-wave" id="oceanTideWave" style="--tide-fill: ${data.tideLevel.percentage}%;">
+            <div class="tide-water"></div>
+          </div>
           <div class="tide-percentage" id="oceanTidePercentage">${data.tideLevel.percentage}%</div>
           <div class="tide-level-text">현재 조수 레벨</div>
           <div style="font-size: 1em; color: #7f8c8d; margin-top: 5px;" id="oceanTideNextLine">
@@ -470,8 +477,10 @@ function displayOceanOverview(data) {
 
     oceanHTML += `
       <div class="tide-event ${tide.type}-tide">
-        <div class="tide-icon ${tideIconClass}">${tideSymbol}</div>
-        <div class="tide-type">${tide.label}</div>
+        <div class="tide-head">
+          <span class="tide-icon ${tideIconClass}">${tideSymbol}</span>
+          <span class="tide-type">${tide.label}</span>
+        </div>
         <div class="tide-time">${tide.time}</div>
         <div class="tide-height">${tide.height}cm</div>
       </div>
