@@ -1,26 +1,30 @@
 {
-  "date": "2026-04-19",
-  "korean_date": "2026년 04월 19일",
-  "weekday": "Sunday",
+  "date": "2026-04-20",
+  "korean_date": "2026년 04월 20일",
+  "weekday": "Monday",
   "location": "월곶포구",
   "source": "badatime.com",
-  "last_updated": "2026-04-19T00:34:02.136066+09:00",
+  "last_updated": "2026-04-20T00:34:06.301795+09:00",
   "high_tides": [
     {
-      "time": "05:59",
-      "height": 909
+      "time": "06:40",
+      "height": 901
     },
     {
-      "time": "18:10",
-      "height": 823
+      "time": "18:49",
+      "height": 793
     }
   ],
   "low_tides": [
     {
-      "time": "12:23",
-      "height": 43
+      "time": "00:29",
+      "height": -17
+    },
+    {
+      "time": "13:04",
+      "height": 75
     }
   ],
-  "sunrise": "05:54",
-  "sunset": "19:12"
+  "sunrise": "05:52",
+  "sunset": "19:13"
 }
