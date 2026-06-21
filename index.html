@@ -7,7 +7,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <link rel="stylesheet" href="styles/ocean.css?v=2.4">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="styles/ocean.css?v=2.5">
 </head>
 <body>
     <div class="container">
@@ -16,7 +18,6 @@
             <div class="subtitle">넓은 통창으로 보는 오션의 정보</div>
             <div class="building-info">월곶포구 실시간 조수 정보</div>
             <button class="refresh-btn" onclick="loadOceanData(true)">🔄 정보 새로고침</button>
-            <button class="refresh-btn" onclick="forceRefresh()" style="margin-left: 10px;">🔥 강제 새로고침</button>
         </div>
 
         <div id="oceanContainer">
@@ -24,6 +25,6 @@
         </div>
     </div>
 
-    <script src="js/ocean.js?v=2.2"></script>
+    <script src="js/ocean.js?v=2.3"></script>
 </body>
 </html>

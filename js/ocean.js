@@ -26,18 +26,49 @@ const kstDateKeyFormatter = new Intl.DateTimeFormat('sv-SE', {
 
 function pad2(n) { return String(n).padStart(2, "0"); }
 
-function kstNow() {
-  const now = new Date();
+function getKstParts(date = new Date()) {
   const fmt = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Asia/Seoul",
     year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit"
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false
   });
-  const parts = fmt.formatToParts(now).reduce((acc, p) => {
-    acc[p.type] = p.value;
+  return fmt.formatToParts(date).reduce((acc, p) => {
+    if (p.type !== 'literal') acc[p.type] = p.value;
     return acc;
   }, {});
+}
+
+function kstNow() {
+  const now = new Date();
+  const parts = getKstParts(now);
   return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}+09:00`);
+}
+
+function currentKstAbsMinutes() {
+    const parts = getKstParts();
+    return Number(parts.hour) * 60 + Number(parts.minute);
+}
+
+function formatDuration(minutes) {
+    const safeMinutes = Math.max(0, Math.round(Number(minutes) || 0));
+    const h = Math.floor(safeMinutes / 60);
+    const m = safeMinutes % 60;
+    if (h <= 0) return `${m}분 후`;
+    if (m === 0) return `${h}시간 후`;
+    return `${h}시간 ${m}분 후`;
+}
+
+function getTideTypeLabel(type) {
+    if (type === 'high') return '만조';
+    if (type === 'low') return '간조';
+    return '조수';
+}
+
+function getFlowLabel(status) {
+    if (status === '오름') return '물이 차오르는 중';
+    if (status === '내림') return '물이 빠지는 중';
+    return status || '상태 확인 중';
 }
 
 function timeToMinutes(timeStr) {
@@ -86,8 +117,7 @@ function buildTideEvents(highTides, lowTides, dayOffset) {
 }
 
 function calculateCurrentTideLevel(tideEvents) {
-    const now = kstNow();
-    const currentAbsMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentAbsMinutes = currentKstAbsMinutes();
 
     const events = (tideEvents || [])
         .filter(e => e && Number.isFinite(e.absMinutes) && Number.isFinite(e.height))
@@ -179,8 +209,7 @@ function calculateCurrentTideLevel(tideEvents) {
 }
 
 function getSunStatus(sunrise, sunset) {
-    const now = kstNow();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentMinutes = currentKstAbsMinutes();
     
     if (sunrise && sunset) {
         const [srHour, srMin] = sunrise.split(':').map(Number);
@@ -254,10 +283,9 @@ async function loadOceanData(forceReload = false) {
 }
     
 function displayOceanData(todayData, tomorrowData) {
-  const now = kstNow();
-  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  const kstParts = getKstParts();
   
-  const dateStr = (todayData && todayData.korean_date) || `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${weekdays[now.getDay()]})`;
+  const dateStr = (todayData && todayData.korean_date) || `${kstParts.year}년 ${Number(kstParts.month)}월 ${Number(kstParts.day)}일`;
   
   const todayHigh = (todayData && todayData.high_tides) || [];
   const todayLow = (todayData && todayData.low_tides) || [];
@@ -281,6 +309,9 @@ function displayOceanData(todayData, tomorrowData) {
     lowTides: Array.isArray(todayLow) && todayLow.length ? todayLow : [],
     sunrise: (todayData && todayData.sunrise) || "--:--",
     sunset: (todayData && todayData.sunset) || "--:--",
+    location: (todayData && todayData.location) || "월곶포구",
+    source: (todayData && todayData.source) || "",
+    lastUpdated: todayData && todayData.last_updated,
     tideLevel: tideLevel,
     sunStatus: sunStatus
   };
@@ -333,6 +364,11 @@ function updateMinuteIndicators() {
         pctEl.textContent = `${tideLevel.percentage}%`;
     }
 
+    const heightEl = document.getElementById('oceanCurrentHeight');
+    if (heightEl) {
+        heightEl.textContent = `${tideLevel.currentHeight}cm`;
+    }
+
     const waveEl = document.getElementById('oceanTideWave');
     if (waveEl) {
         waveEl.style.setProperty('--tide-fill', `${tideLevel.percentage}%`);
@@ -340,8 +376,13 @@ function updateMinuteIndicators() {
 
     const nextEl = document.getElementById('oceanTideNextLine');
     if (nextEl) {
-        nextEl.textContent = `${tideLevel.status} · 다음 ${tideLevel.nextTide.displayTime || tideLevel.nextTide.time || '--:--'}`;
+        nextEl.textContent = `${getFlowLabel(tideLevel.status)} · 다음 ${getTideTypeLabel(tideLevel.nextTide.type)} ${tideLevel.nextTide.displayTime || tideLevel.nextTide.time || '--:--'} · ${formatDuration(tideLevel.timeToNext)}`;
     }
+
+    document.querySelectorAll('.tide-event').forEach(card => {
+        const isNext = card.dataset.tideTime === tideLevel.nextTide.time && card.dataset.tideType === tideLevel.nextTide.type;
+        card.classList.toggle('next-tide', isNext);
+    });
 
     // Sun status changes minute-by-minute around sunrise/sunset
     const todayData = lastOceanData.today;
@@ -394,13 +435,12 @@ function escapeHtml(s) {
 }
 
 function displaySampleOceanData() {
-  const now = kstNow();
-  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-  const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${weekdays[now.getDay()]})`;
+  const kstParts = getKstParts();
+  const dateStr = `${kstParts.year}년 ${Number(kstParts.month)}월 ${Number(kstParts.day)}일`;
 
   const sampleData = {
     date: dateStr,
-    currentTime: now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+    currentTime: kstTimeFormatter.format(new Date()),
     highTides: [
       { time: "06:30", height: 350 },
       { time: "18:45", height: 280 }
@@ -411,6 +451,9 @@ function displaySampleOceanData() {
     ],
     sunrise: "06:30",
     sunset: "18:45",
+    location: "월곶포구",
+    source: "샘플 데이터",
+    lastUpdated: null,
     tideLevel: {
         percentage: 65,
         currentHeight: 250,
@@ -426,6 +469,9 @@ function displaySampleOceanData() {
 
 function displayOceanOverview(data) {
   const container = document.getElementById("oceanContainer");
+  const lastUpdatedText = data.lastUpdated ? formatLastUpdated(data.lastUpdated) : '업데이트 시간 확인 중';
+  const nextLabel = getTideTypeLabel(data.tideLevel.nextTide.type);
+  const flowLabel = getFlowLabel(data.tideLevel.status);
 
   let oceanHTML = `
     <div class="ocean-overview">
@@ -433,16 +479,19 @@ function displayOceanOverview(data) {
         <div class="status-time">
           <div class="current-time" id="oceanCurrentTime">${data.currentTime}</div>
           <div class="current-date" id="oceanCurrentDate">${data.date}</div>
+          <div class="updated-at">${lastUpdatedText}</div>
         </div>
         
         <div class="tide-level-indicator">
+          <div class="tide-kicker">현재 예상 수위</div>
+          <div class="current-height" id="oceanCurrentHeight">${data.tideLevel.currentHeight}cm</div>
           <div class="tide-wave" id="oceanTideWave" style="--tide-fill: ${data.tideLevel.percentage}%;">
             <div class="tide-water"></div>
           </div>
           <div class="tide-percentage" id="oceanTidePercentage">${data.tideLevel.percentage}%</div>
-          <div class="tide-level-text">현재 조수 레벨</div>
-          <div style="font-size: 1em; color: #7f8c8d; margin-top: 5px;" id="oceanTideNextLine">
-            ${data.tideLevel.status} · 다음 ${data.tideLevel.nextTide.displayTime || data.tideLevel.nextTide.time || '--:--'}
+          <div class="tide-level-text">저조~만조 기준 레벨</div>
+          <div class="tide-next-line" id="oceanTideNextLine">
+            ${flowLabel} · 다음 ${nextLabel} ${data.tideLevel.nextTide.displayTime || data.tideLevel.nextTide.time || '--:--'} · ${formatDuration(data.tideLevel.timeToNext)}
           </div>
         </div>
         
@@ -474,9 +523,11 @@ function displayOceanOverview(data) {
   allTides.forEach(tide => {
     const tideSymbol = tide.type === 'high' ? '▲' : '▼';
     const tideIconClass = tide.type === 'high' ? 'tide-icon-high' : 'tide-icon-low';
+    const isNextTide = tide.time === data.tideLevel.nextTide.time && tide.type === data.tideLevel.nextTide.type;
 
     oceanHTML += `
-      <div class="tide-event ${tide.type}-tide">
+      <div class="tide-event ${tide.type}-tide ${isNextTide ? 'next-tide' : ''}" data-tide-time="${tide.time}" data-tide-type="${tide.type}">
+        ${isNextTide ? '<div class="next-badge">다음</div>' : ''}
         <div class="tide-head">
           <span class="tide-icon ${tideIconClass}">${tideSymbol}</span>
           <span class="tide-type">${tide.label}</span>
@@ -505,13 +556,27 @@ function displayOceanOverview(data) {
         <div class="condition-card">
           <div class="condition-icon">📍</div>
           <div class="condition-label">위치</div>
-          <div class="condition-value">월곶포구</div>
+          <div class="condition-value">${data.location || '월곶포구'}</div>
         </div>
       </div>
+      <div class="data-source">출처 ${data.source || '조수 데이터'} · 자동 5분 갱신</div>
     </div>
   `;
 
   container.innerHTML = oceanHTML;
+}
+
+function formatLastUpdated(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '최근 업데이트 확인 중';
+    const dateText = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(date);
+    return `최근 업데이트 ${dateText}`;
 }
 
 // 초기 로드 및 주기적 업데이트
