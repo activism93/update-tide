@@ -99,10 +99,12 @@ def parse_arrivals(station):
     arrivals = []
     for row in rows:
         route = str(row.get('routeName') or row.get('routeId') or '')
+        added = False
         for order in (1, 2):
             predict = row.get(f'predictTime{order}')
             if predict in (None, '', 0, '0'):
                 continue
+            added = True
             arrivals.append({
                 'routeName': route,
                 'minutes': int(predict),
@@ -112,8 +114,22 @@ def parse_arrivals(station):
                 'crowded': crowd_label(row.get(f'crowded{order}')),
                 'destination': row.get('routeDestName') or '',
                 'lowPlate': str(row.get(f'lowPlate{order}')) == '1',
+                'hasPrediction': True,
             })
-    arrivals.sort(key=lambda x: (x['minutes'], x['seconds']))
+        if not added and route:
+            arrivals.append({
+                'routeName': route,
+                'minutes': None,
+                'seconds': None,
+                'locationNo': '',
+                'plateNo': '',
+                'crowded': '',
+                'destination': row.get('routeDestName') or '',
+                'lowPlate': False,
+                'hasPrediction': False,
+                'statusText': '도착 예정 없음',
+            })
+    arrivals.sort(key=lambda x: (x['minutes'] is None, x['minutes'] or 9999, x['seconds'] or 9999, str(x['routeName'])))
     return {
         **station,
         'arrivals': arrivals[:8],

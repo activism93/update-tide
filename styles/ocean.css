@@ -893,3 +893,16 @@ body {
     .stop-map-card { padding: 16px; }
     .stop-map-image { border-radius: 18px; }
 }
+
+
+.bus-arrival-row.no-prediction {
+    opacity: 0.72;
+}
+
+.bus-arrival-row.no-prediction .bus-route-no {
+    background: #64748b;
+}
+
+.bus-arrival-row.no-prediction .bus-arrival-main strong {
+    color: #64748b;
+}
