@@ -1102,3 +1102,15 @@ body {
     justify-self: end;
     align-self: center;
 }
+
+.portal-login-body { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.portal-login { width: min(440px, 100%); }
+.portal-login-card { background: rgba(255,255,255,0.96); border-radius: 28px; padding: 30px; box-shadow: 0 28px 90px rgba(6,26,48,.22); }
+.portal-login-card h1 { margin: 6px 0 8px; color: #123b5d; }
+.portal-login-card p { color: #60788a; line-height: 1.5; }
+.login-kicker { color: #0f7895; font-weight: 900; }
+.portal-login-card form { display: grid; gap: 14px; margin-top: 20px; }
+.portal-login-card label { display: grid; gap: 7px; color: #123b5d; font-weight: 800; }
+.portal-login-card input { padding: 13px 14px; border: 1px solid rgba(14,116,144,.2); border-radius: 14px; font-size: 16px; }
+.portal-login-card button { border: 0; border-radius: 14px; padding: 14px; background: #0f7895; color: white; font-weight: 900; font-size: 16px; }
+.login-error { padding: 10px 12px; border-radius: 12px; background: #fef2f2; color: #b91c1c !important; font-weight: 800; }
