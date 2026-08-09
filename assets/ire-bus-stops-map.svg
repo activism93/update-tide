@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 520" role="img" aria-labelledby="title desc">
+  <title id="title">월곶 이레하이니스 주변 버스 정류소 위치 안내</title>
+  <desc id="desc">월곶 이레하이니스 기준 풍림아파트상가와 월곶포구 정류소 위치를 단순화한 안내 지도</desc>
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bfefff"/>
+      <stop offset="1" stop-color="#65b8d9"/>
+    </linearGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fbf7"/>
+      <stop offset="1" stop-color="#e8f3ec"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0b3550" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <rect width="920" height="520" rx="34" fill="url(#land)"/>
+  <path d="M0 0h310c-42 78-69 143-62 215 7 77 53 124 54 199 1 41-13 76-35 106H0z" fill="url(#sea)" opacity="0.95"/>
+  <path d="M300 38c-31 57-50 112-44 176 7 78 54 125 55 199 0 29-7 55-19 80" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round" opacity="0.7"/>
+  <path d="M350 420 C470 360, 530 324, 650 250 S810 126, 920 96" fill="none" stroke="#d7e5df" stroke-width="72" stroke-linecap="round"/>
+  <path d="M350 420 C470 360, 530 324, 650 250 S810 126, 920 96" fill="none" stroke="#ffffff" stroke-width="38" stroke-linecap="round"/>
+  <path d="M368 418 C482 359, 538 326, 655 253 S812 134, 915 102" fill="none" stroke="#9fb6c1" stroke-width="3" stroke-dasharray="10 12" opacity="0.65"/>
+
+  <g opacity="0.38">
+    <rect x="520" y="75" width="78" height="46" rx="10" fill="#dbe9de"/>
+    <rect x="620" y="72" width="96" height="54" rx="11" fill="#dbe9de"/>
+    <rect x="690" y="156" width="106" height="58" rx="12" fill="#dbe9de"/>
+    <rect x="438" y="285" width="92" height="54" rx="12" fill="#dbe9de"/>
+    <rect x="570" y="346" width="132" height="60" rx="14" fill="#dbe9de"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <circle cx="300" cy="312" r="19" fill="#0f7895"/>
+    <circle cx="300" cy="312" r="7" fill="#fff"/>
+    <rect x="202" y="246" width="196" height="48" rx="17" fill="#0f7895"/>
+    <text x="300" y="276" text-anchor="middle" font-family="Pretendard, Arial, sans-serif" font-size="20" font-weight="800" fill="#fff">월곶 이레하이니스</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <circle cx="430" cy="248" r="17" fill="#2563eb"/>
+    <text x="430" y="255" text-anchor="middle" font-family="Arial" font-size="19" font-weight="900" fill="#fff">B</text>
+    <rect x="454" y="203" width="255" height="78" rx="18" fill="#fff"/>
+    <text x="475" y="231" font-family="Pretendard, Arial, sans-serif" font-size="19" font-weight="900" fill="#123b5d">풍림아파트상가</text>
+    <text x="475" y="256" font-family="Pretendard, Arial, sans-serif" font-size="15" font-weight="700" fill="#60788a">25164 / 25162 · 약 160~180m</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <circle cx="492" cy="374" r="17" fill="#0891b2"/>
+    <text x="492" y="381" text-anchor="middle" font-family="Arial" font-size="19" font-weight="900" fill="#fff">B</text>
+    <rect x="516" y="332" width="238" height="76" rx="18" fill="#fff"/>
+    <text x="537" y="360" font-family="Pretendard, Arial, sans-serif" font-size="19" font-weight="900" fill="#123b5d">월곶포구</text>
+    <text x="537" y="385" font-family="Pretendard, Arial, sans-serif" font-size="15" font-weight="700" fill="#60788a">25187 / 25188 · 약 430~450m</text>
+  </g>
+
+  <path d="M314 306 C350 282, 382 264, 414 250" fill="none" stroke="#0f7895" stroke-width="5" stroke-linecap="round" stroke-dasharray="10 10" opacity="0.75"/>
+  <path d="M310 324 C365 355, 421 370, 474 374" fill="none" stroke="#0f7895" stroke-width="5" stroke-linecap="round" stroke-dasharray="10 10" opacity="0.55"/>
+
+  <g>
+    <rect x="38" y="386" width="226" height="84" rx="20" fill="#ffffff" opacity="0.88"/>
+    <text x="62" y="418" font-family="Pretendard, Arial, sans-serif" font-size="17" font-weight="900" fill="#123b5d">정류소 위치 안내</text>
+    <text x="62" y="446" font-family="Pretendard, Arial, sans-serif" font-size="14" font-weight="700" fill="#60788a">실제 길은 보행 동선에 따라</text>
+    <text x="62" y="466" font-family="Pretendard, Arial, sans-serif" font-size="14" font-weight="700" fill="#60788a">거리와 방향이 달라질 수 있습니다.</text>
+  </g>
+</svg>

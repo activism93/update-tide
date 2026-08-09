@@ -847,3 +847,22 @@ body {
     .bus-arrival-row { grid-template-columns: minmax(58px, auto) 1fr; }
     .bus-crowd { grid-column: 2; justify-self: start; }
 }
+
+
+.stop-map-card {
+    padding: 22px;
+}
+
+.stop-map-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 22px;
+    border: 1px solid rgba(14, 116, 144, 0.12);
+    box-shadow: 0 14px 36px rgba(15, 76, 117, 0.08);
+}
+
+@media (max-width: 480px) {
+    .stop-map-card { padding: 16px; }
+    .stop-map-image { border-radius: 18px; }
+}
