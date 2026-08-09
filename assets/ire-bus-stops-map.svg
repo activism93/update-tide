@@ -39,10 +39,11 @@
   </g>
 
   <g filter="url(#shadow)">
-    <rect x="28" y="612" width="452" height="154" rx="20" fill="white" opacity="0.94"/>
-    <text x="54" y="646" class="legend-title">주변 정류소 3곳</text>
-    <text x="54" y="678" class="legend-text">1 · 풍림아파트상가 25164</text>
-    <text x="54" y="708" class="legend-text">2 · 풍림아파트상가 25162</text>
-    <text x="54" y="738" class="legend-text">3 · 풍림아파트후문 25161</text>
+    <rect x="28" y="628" width="388" height="124" rx="18" fill="white" opacity="0.94"/>
+    <text x="52" y="656" class="legend-title">주변 정류소 3곳</text>
+    <text x="52" y="682" class="legend-text">1 · 풍림아파트상가 25164</text>
+    <text x="52" y="706" class="legend-text">2 · 풍림아파트상가 25162</text>
+    <text x="52" y="730" class="legend-text">3 · 풍림아파트후문 25161</text>
+    <text x="52" y="748" class="legend-text" style="font-size:12px;fill:#0f7895">지도 번호를 누르면 정류소 정보로 이동합니다.</text>
   </g>
 </svg>
