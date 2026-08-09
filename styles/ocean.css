@@ -95,7 +95,8 @@ body {
     border-radius: 999px;
     background: linear-gradient(135deg, rgba(14, 116, 144, 0.1), rgba(37, 99, 235, 0.08));
     color: #0f5f7b;
-    font-size: 0.9em;
+    font-size: 0.86em;
+    line-height: 1;
     font-weight: 850;
     letter-spacing: -0.01em;
 }
@@ -788,17 +789,19 @@ body {
 
 .bus-arrival-row {
     display: grid;
-    grid-template-columns: 54px 1fr auto;
-    gap: 10px;
+    grid-template-columns: minmax(62px, auto) 1fr auto;
+    gap: 11px;
     align-items: center;
     padding: 10px 0;
     border-top: 1px solid rgba(15, 76, 117, 0.08);
 }
 
 .bus-route-no {
-    min-width: 46px;
+    min-width: 54px;
+    width: max-content;
+    max-width: 82px;
     text-align: center;
-    padding: 6px 8px;
+    padding: 6px 10px;
     border-radius: 12px;
     background: #0f7895;
     color: white;
@@ -841,6 +844,6 @@ body {
 @media (max-width: 480px) {
     .resident-info-card { padding: 20px 15px; border-radius: 24px; }
     .bus-card-header { align-items: center; }
-    .bus-arrival-row { grid-template-columns: 48px 1fr; }
+    .bus-arrival-row { grid-template-columns: minmax(58px, auto) 1fr; }
     .bus-crowd { grid-column: 2; justify-self: start; }
 }
