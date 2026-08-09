@@ -13,7 +13,6 @@ GG_BASE_STATION = 'https://apis.data.go.kr/6410000/busstationservice/v2/getBusSt
 GG_BASE_STATION_ROUTES = 'https://apis.data.go.kr/6410000/busstationservice/v2/getBusStationViaRouteListv2'
 CACHE_TTL = int(os.getenv('BUS_CACHE_TTL_SECONDS', '30'))
 CACHE = {}
-PINNED_ROUTES = {'23', '32', '34', '790', '790A', '790B', 'M6410'}
 DEFAULT_STATIONS = [
     {
         'mapNo': '1',
@@ -161,10 +160,8 @@ def parse_arrivals(station):
         route['predictions'].sort(key=lambda x: (x['minutes'], x['seconds']))
         first = route['predictions'][0] if route['predictions'] else None
         second = route['predictions'][1] if len(route['predictions']) > 1 else None
-        route_name = str(route['routeName']).upper()
         arrivals.append({
             'routeName': route['routeName'],
-            'isPinned': route_name in PINNED_ROUTES,
             'minutes': first['minutes'] if first else None,
             'seconds': first['seconds'] if first else None,
             'locationNo': first['locationNo'] if first else '',
@@ -179,7 +176,7 @@ def parse_arrivals(station):
             'nextMinutes': second['minutes'] if second else None,
         })
 
-    arrivals.sort(key=lambda x: (not x.get('isPinned'), x['minutes'] is None, x['minutes'] or 9999, str(x['routeName'])))
+    arrivals.sort(key=lambda x: (x['minutes'] is None, x['minutes'] or 9999, str(x['routeName'])))
     return {
         **station,
         'arrivals': arrivals,

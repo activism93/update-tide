@@ -816,7 +816,7 @@ body {
 
 .bus-arrival-row {
     display: grid;
-    grid-template-columns: minmax(62px, auto) 1fr auto;
+    grid-template-columns: minmax(62px, auto) 1fr 38px auto;
     gap: 11px;
     align-items: center;
     padding: 10px 0;
@@ -871,7 +871,7 @@ body {
 @media (max-width: 480px) {
     .resident-info-card { padding: 20px 15px; border-radius: 24px; }
     .bus-card-header { align-items: center; }
-    .bus-arrival-row { grid-template-columns: minmax(58px, auto) 1fr; }
+    .bus-arrival-row { grid-template-columns: minmax(58px, auto) 1fr 34px; }
     .bus-crowd { grid-column: 2; justify-self: start; }
 }
 
@@ -1020,4 +1020,42 @@ body {
 
 .legend-pin {
     font-size: 0.9em;
+}
+
+
+.route-pin-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(14, 116, 144, 0.16);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.78);
+    color: #78909c;
+    font-weight: 950;
+    cursor: pointer;
+    display: inline-grid;
+    place-items: center;
+    transition: transform .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.route-pin-btn:hover,
+.route-pin-btn:focus-visible {
+    outline: none;
+    transform: translateY(-1px);
+    background: #fff7ed;
+    color: #f97316;
+    box-shadow: 0 8px 18px rgba(249, 115, 22, 0.16);
+}
+
+.route-pin-btn.active {
+    background: #fffbeb;
+    color: #d97706;
+    border-color: rgba(217, 119, 6, 0.28);
+}
+
+.bus-arrival-row.no-prediction .route-pin-btn {
+    opacity: 1;
+}
+
+@media (max-width: 480px) {
+    .route-pin-btn { width: 30px; height: 30px; }
 }

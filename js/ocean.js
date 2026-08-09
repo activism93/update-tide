@@ -651,6 +651,49 @@ function busRouteClass(routeName, routeTypeName) {
   return 'route-default';
 }
 
+const BUS_PIN_STORAGE_KEY = 'ireResidentPinnedBusRoutes:v1';
+
+function normalizeRouteName(routeName) {
+  return String(routeName || '').trim().toUpperCase();
+}
+
+function getPinnedRoutes() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(BUS_PIN_STORAGE_KEY) || '[]'));
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function savePinnedRoutes(pins) {
+  localStorage.setItem(BUS_PIN_STORAGE_KEY, JSON.stringify([...pins]));
+}
+
+function toggleBusRoutePin(routeName) {
+  const key = normalizeRouteName(routeName);
+  if (!key) return;
+  const pins = getPinnedRoutes();
+  if (pins.has(key)) pins.delete(key);
+  else pins.add(key);
+  savePinnedRoutes(pins);
+  loadBusArrivals();
+}
+
+function applyUserPinnedSort(arrivals) {
+  const pins = getPinnedRoutes();
+  return [...(arrivals || [])]
+    .map((arrival, index) => ({
+      ...arrival,
+      isUserPinned: pins.has(normalizeRouteName(arrival.routeName)),
+      originalIndex: index
+    }))
+    .sort((a, b) => {
+      if (a.isUserPinned !== b.isUserPinned) return a.isUserPinned ? -1 : 1;
+      if (a.isUserPinned && b.isUserPinned) return normalizeRouteName(a.routeName).localeCompare(normalizeRouteName(b.routeName), 'ko');
+      return a.originalIndex - b.originalIndex;
+    });
+}
+
 function scrollToBusStop(anchorId) {
   const target = document.getElementById(anchorId);
   if (!target) return;
@@ -689,14 +732,15 @@ function renderBusArrivals(data) {
   const card = document.getElementById('busInfoCard');
   if (!card) return;
   const stationHtml = (data.stations || []).map(station => {
-    const arrivals = (station.arrivals || []);
+    const arrivals = applyUserPinnedSort(station.arrivals || []);
     const arrivalHtml = arrivals.length ? arrivals.map(arrival => `
-      <div class="bus-arrival-row ${arrival.hasPrediction === false ? 'no-prediction' : ''} ${arrival.isPinned ? 'pinned-route' : ''}">
-        <div class="bus-route-no ${busRouteClass(arrival.routeName, arrival.routeTypeName)}">${arrival.isPinned ? '<span class="pin-dot">📌</span>' : ''}${arrival.routeName}</div>
+      <div class="bus-arrival-row ${arrival.hasPrediction === false ? 'no-prediction' : ''} ${arrival.isUserPinned ? 'pinned-route' : ''}">
+        <div class="bus-route-no ${busRouteClass(arrival.routeName, arrival.routeTypeName)}">${arrival.routeName}</div>
         <div class="bus-arrival-main">
           <strong>${arrival.hasPrediction === false ? (arrival.statusText || '도착 예정 없음') : `${arrival.minutes}분 후`}</strong>
           <span>${arrival.hasPrediction === false ? (arrival.destination ? `${arrival.destination}행` : '현재 예측 차량 없음') : `${arrival.locationNo ? `${arrival.locationNo}번째 전` : '도착 정보 확인 중'}${arrival.nextMinutes ? ` · 다음 ${arrival.nextMinutes}분` : ''}${arrival.destination ? ` · ${arrival.destination}행` : ''}`}</span>
         </div>
+        <button class="route-pin-btn ${arrival.isUserPinned ? 'active' : ''}" type="button" onclick="toggleBusRoutePin('${String(arrival.routeName).replace(/'/g, "&#39;")}')" aria-label="${arrival.routeName} 노선 ${arrival.isUserPinned ? '고정 해제' : '상단 고정'}">${arrival.isUserPinned ? '📌' : '＋'}</button>
         ${arrival.crowded ? `<div class="bus-crowd">${arrival.crowded}</div>` : ''}
       </div>
     `).join('') : '<div class="bus-empty">현재 표시할 도착 정보가 없습니다.</div>';
@@ -723,7 +767,7 @@ function renderBusArrivals(data) {
       <span><i class="route-swatch route-green"></i> 일반/지선</span>
       <span><i class="route-swatch route-blue"></i> 좌석/간선형</span>
       <span><i class="route-swatch route-red"></i> 광역/M버스</span>
-      <span><b class="legend-pin">📌</b> 주요 노선 상단 고정</span>
+      <span><b class="legend-pin">＋/📌</b> 노선 직접 고정</span>
     </div>
     <div class="bus-grid">${stationHtml}</div>
     <div class="data-source">출처 ${data.source || '경기도 버스정보'} · 약 30초 캐시</div>
