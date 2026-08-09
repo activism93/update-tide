@@ -601,10 +601,9 @@ function displayOceanOverview(data) {
 
     oceanHTML += `
       <div class="tide-event ${tide.type}-tide ${isNextTide ? 'next-tide' : ''}" data-tide-time="${tide.time}" data-tide-type="${tide.type}">
-        ${isNextTide ? '<div class="next-badge">다음</div>' : ''}
         <div class="tide-head">
           <span class="tide-icon ${tideIconClass}">${tideSymbol}</span>
-          <span class="tide-type">${tide.label}</span>
+          <span class="tide-type">${tide.label}${isNextTide ? '<span class="next-badge">다음</span>' : ''}</span>
         </div>
         <div class="tide-time">${tide.time}</div>
         <div class="tide-height">${tide.height}cm</div>
