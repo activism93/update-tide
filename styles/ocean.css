@@ -1347,3 +1347,36 @@ body {
     .bus-crowd, .bus-crowd-placeholder { grid-area: crowd; grid-column: auto; }
     .route-pin-btn { grid-area: pin; grid-column: auto; }
 }
+
+
+.stop-map-hint {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
+    color: #0f7895;
+    font-size: 0.95rem;
+    font-weight: 900;
+    line-height: 1.2;
+    text-align: center;
+    box-shadow: 0 10px 24px rgba(11, 37, 56, 0.18);
+    backdrop-filter: blur(8px);
+}
+
+@media (max-width: 640px) {
+    .stop-map-hint {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        padding: 8px 10px;
+        font-size: 0.82rem;
+        border-radius: 14px;
+    }
+}
