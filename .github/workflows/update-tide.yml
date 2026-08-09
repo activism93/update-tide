@@ -6,7 +6,7 @@ on:
     - cron: "0 15 * * *"  # 매일 00:00 KST
   workflow_dispatch: {}  # 수동 실행 가능
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'scripts/update_tide_json.py'
       - '.github/workflows/update-tide.yml'
