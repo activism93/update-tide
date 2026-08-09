@@ -778,6 +778,14 @@ body {
     white-space: nowrap;
 }
 
+.bus-direction {
+    margin: -4px 0 10px;
+    color: #0f7895;
+    font-weight: 800;
+    font-size: 0.9em;
+    line-height: 1.35;
+}
+
 .bus-arrival-row {
     display: grid;
     grid-template-columns: 54px 1fr auto;

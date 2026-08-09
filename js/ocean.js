@@ -653,7 +653,7 @@ async function loadBusArrivals() {
       <div class="bus-card-header">
         <div>
           <div class="section-kicker">교통 정보</div>
-          <h2>월곶역 주변 버스</h2>
+          <h2>이레하이니스 주변 버스</h2>
         </div>
         <div class="bus-badge">준비중</div>
       </div>
@@ -681,8 +681,9 @@ function renderBusArrivals(data) {
       <div class="bus-station-card">
         <div class="bus-station-title">
           <span>${station.stationName}</span>
-          <small>${station.mobileNo ? `정류소 ${station.mobileNo}` : ''}</small>
+          <small>${station.distance || ''}${station.mobileNo ? ` · ${station.mobileNo}` : ''}</small>
         </div>
+        ${station.direction ? `<div class="bus-direction">${station.direction}</div>` : ''}
         ${arrivalHtml}
       </div>
     `;
@@ -691,7 +692,7 @@ function renderBusArrivals(data) {
     <div class="bus-card-header">
       <div>
         <div class="section-kicker">교통 정보</div>
-        <h2>${data.title || '월곶역 주변 버스 도착'}</h2>
+        <h2>${data.title || '이레하이니스 주변 버스 도착'}</h2>
       </div>
       <div class="bus-badge">실시간</div>
     </div>

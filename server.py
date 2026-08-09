@@ -13,9 +13,34 @@ GG_BASE_STATION = 'https://apis.data.go.kr/6410000/busstationservice/v2/getBusSt
 CACHE_TTL = int(os.getenv('BUS_CACHE_TTL_SECONDS', '30'))
 CACHE = {}
 DEFAULT_STATIONS = [
-    {'stationId': '224000920', 'stationName': '월곶어울림센터·월곶역', 'mobileNo': '25926'},
-    {'stationId': '224000093', 'stationName': '월곶역', 'mobileNo': '25204'},
-    {'stationId': '224000448', 'stationName': '월곶역', 'mobileNo': '25202'},
+    {
+        'stationId': '224000096',
+        'stationName': '풍림아파트상가',
+        'mobileNo': '25164',
+        'direction': '상행 · 배곧/오이도/강남 방면',
+        'distance': '약 160m',
+    },
+    {
+        'stationId': '224000125',
+        'stationName': '풍림아파트상가',
+        'mobileNo': '25162',
+        'direction': '하행 · 개봉/대야/인천 방면',
+        'distance': '약 180m',
+    },
+    {
+        'stationId': '224000095',
+        'stationName': '월곶포구',
+        'mobileNo': '25187',
+        'direction': '포구 앞 · 배곧/오이도 방면',
+        'distance': '약 430m',
+    },
+    {
+        'stationId': '224000126',
+        'stationName': '월곶포구',
+        'mobileNo': '25188',
+        'direction': '포구 앞 · 개봉/대야/인천 방면',
+        'distance': '약 450m',
+    },
 ]
 
 def load_dotenv(path=BASE_DIR / '.env'):
@@ -105,7 +130,7 @@ def handle_bus_arrivals(handler):
     def factory():
         stations = [parse_arrivals(s) for s in DEFAULT_STATIONS]
         return {
-            'title': '월곶역 주변 버스 도착',
+            'title': '이레하이니스 주변 버스 도착',
             'stations': stations,
             'source': '경기도 버스도착정보 API',
         }
@@ -113,7 +138,7 @@ def handle_bus_arrivals(handler):
         json_response(handler, cached('bus-arrivals-default', factory))
     except Exception as exc:
         json_response(handler, {
-            'title': '월곶역 주변 버스 도착',
+            'title': '이레하이니스 주변 버스 도착',
             'stations': [{**s, 'arrivals': []} for s in DEFAULT_STATIONS],
             'note': f'버스 정보를 불러오지 못했습니다: {exc}',
             'source': '경기도 버스도착정보 API',
