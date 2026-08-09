@@ -680,7 +680,7 @@ function renderBusArrivals(data) {
     return `
       <div class="bus-station-card">
         <div class="bus-station-title">
-          <span>${station.stationName}${station.mobileNo ? ` <em>${station.mobileNo}</em>` : ''}</span>
+          <span>${station.mapNo ? `<b class="map-no">${station.mapNo}</b> ` : ''}${station.stationName}${station.mobileNo ? ` <em>${station.mobileNo}</em>` : ''}</span>
           <small>${station.distance || ''}</small>
         </div>
         ${station.direction ? `<div class="bus-direction">${station.direction}</div>` : ''}

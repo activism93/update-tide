@@ -41,8 +41,8 @@
   <g filter="url(#shadow)">
     <rect x="28" y="612" width="452" height="154" rx="20" fill="white" opacity="0.94"/>
     <text x="54" y="646" class="legend-title">주변 정류소 3곳</text>
-    <text x="54" y="678" class="legend-text">1 · 월곶해안로 상단 정류소</text>
-    <text x="54" y="708" class="legend-text">2 · 나드리 지역아동센터 인근 정류소</text>
-    <text x="54" y="738" class="legend-text">3 · 윤슬동물병원 인근 정류소</text>
+    <text x="54" y="678" class="legend-text">1 · 풍림아파트상가 25164</text>
+    <text x="54" y="708" class="legend-text">2 · 풍림아파트상가 25162</text>
+    <text x="54" y="738" class="legend-text">3 · 풍림아파트후문 25161</text>
   </g>
 </svg>

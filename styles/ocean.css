@@ -779,6 +779,20 @@ body {
     white-space: nowrap;
 }
 
+.map-no {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 3px;
+    border-radius: 999px;
+    background: #2563eb;
+    color: white;
+    font-size: 0.82em;
+    font-weight: 950;
+    vertical-align: middle;
+}
+
 .bus-station-title em {
     display: inline-flex;
     margin-left: 6px;

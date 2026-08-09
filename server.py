@@ -14,6 +14,7 @@ CACHE_TTL = int(os.getenv('BUS_CACHE_TTL_SECONDS', '30'))
 CACHE = {}
 DEFAULT_STATIONS = [
     {
+        'mapNo': '1',
         'stationId': '224000096',
         'stationName': '풍림아파트상가',
         'mobileNo': '25164',
@@ -21,6 +22,7 @@ DEFAULT_STATIONS = [
         'distance': '약 160m',
     },
     {
+        'mapNo': '2',
         'stationId': '224000125',
         'stationName': '풍림아파트상가',
         'mobileNo': '25162',
@@ -28,18 +30,12 @@ DEFAULT_STATIONS = [
         'distance': '약 180m',
     },
     {
-        'stationId': '224000095',
-        'stationName': '월곶포구',
-        'mobileNo': '25187',
-        'direction': '포구 앞 · 배곧/오이도 방면',
-        'distance': '약 430m',
-    },
-    {
-        'stationId': '224000126',
-        'stationName': '월곶포구',
-        'mobileNo': '25188',
-        'direction': '포구 앞 · 개봉/대야/인천 방면',
-        'distance': '약 450m',
+        'mapNo': '3',
+        'stationId': '224000124',
+        'stationName': '풍림아파트후문',
+        'mobileNo': '25161',
+        'direction': '후문 · 개봉/대야 방면',
+        'distance': '약 280m',
     },
 ]
 
