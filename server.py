@@ -16,6 +16,7 @@ CACHE = {}
 DEFAULT_STATIONS = [
     {
         'mapNo': '1',
+        'anchorId': 'stop-1',
         'stationId': '224000096',
         'stationName': '풍림아파트상가',
         'mobileNo': '25164',
@@ -24,6 +25,7 @@ DEFAULT_STATIONS = [
     },
     {
         'mapNo': '2',
+        'anchorId': 'stop-2',
         'stationId': '224000125',
         'stationName': '풍림아파트상가',
         'mobileNo': '25162',
@@ -32,6 +34,7 @@ DEFAULT_STATIONS = [
     },
     {
         'mapNo': '3',
+        'anchorId': 'stop-3',
         'stationId': '224000124',
         'stationName': '풍림아파트후문',
         'mobileNo': '25161',

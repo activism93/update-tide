@@ -906,3 +906,73 @@ body {
 .bus-arrival-row.no-prediction .bus-arrival-main strong {
     color: #64748b;
 }
+
+
+.stop-map-wrap {
+    position: relative;
+}
+
+.map-click-marker {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border: 3px solid #fff;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 950;
+    box-shadow: 0 6px 16px rgba(11, 37, 56, 0.28);
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+}
+
+.map-click-marker:hover,
+.map-click-marker:focus-visible {
+    outline: none;
+    transform: translate(-50%, -50%) scale(1.12);
+    box-shadow: 0 8px 22px rgba(11, 37, 56, 0.34);
+}
+
+.marker-1 { left: 82.9%; top: 2.1%; background: #0ea5e9; }
+.marker-2 { left: 87.7%; top: 54.6%; background: #2563eb; }
+.marker-3 { left: 87.0%; top: 72.1%; background: #0891b2; }
+
+.bus-station-card {
+    scroll-margin-top: 18px;
+}
+
+.route-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: -6px 0 14px;
+    color: #60788a;
+    font-size: 0.88em;
+    font-weight: 800;
+}
+
+.route-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(14, 116, 144, 0.1);
+}
+
+.route-swatch {
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    display: inline-block;
+}
+
+.bus-route-no.route-green, .route-swatch.route-green { background: #22c55e; }
+.bus-route-no.route-blue, .route-swatch.route-blue { background: #2563eb; }
+.bus-route-no.route-red, .route-swatch.route-red { background: #ef4444; }
+.bus-route-no.route-default { background: #64748b; }
+
+.bus-arrival-row.no-prediction .bus-route-no.route-green { background: #86efac; color: #14532d; }
+.bus-arrival-row.no-prediction .bus-route-no.route-blue { background: #93c5fd; color: #1e3a8a; }
+.bus-arrival-row.no-prediction .bus-route-no.route-red { background: #fca5a5; color: #7f1d1d; }

@@ -640,6 +640,22 @@ function formatLastUpdated(value) {
     return `최근 업데이트 ${dateText}`;
 }
 
+
+function busRouteClass(routeName, routeTypeName) {
+  const name = String(routeName || '').toUpperCase();
+  const type = String(routeTypeName || '');
+  if (name.startsWith('M') || type.includes('광역')) return 'route-red';
+  if (['790', '790A', '790B'].includes(name) || type.includes('좌석')) return 'route-blue';
+  if (['23', '32', '34', '63'].includes(name) || type.includes('일반')) return 'route-green';
+  if (name === '1') return 'route-green';
+  return 'route-default';
+}
+
+function scrollToBusStop(anchorId) {
+  const target = document.getElementById(anchorId);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 async function loadBusArrivals() {
   const card = document.getElementById('busInfoCard');
   if (!card) return;
@@ -669,7 +685,7 @@ function renderBusArrivals(data) {
     const arrivals = (station.arrivals || []);
     const arrivalHtml = arrivals.length ? arrivals.map(arrival => `
       <div class="bus-arrival-row ${arrival.hasPrediction === false ? 'no-prediction' : ''}">
-        <div class="bus-route-no">${arrival.routeName}</div>
+        <div class="bus-route-no ${busRouteClass(arrival.routeName, arrival.routeTypeName)}">${arrival.routeName}</div>
         <div class="bus-arrival-main">
           <strong>${arrival.hasPrediction === false ? (arrival.statusText || '도착 예정 없음') : `${arrival.minutes}분 후`}</strong>
           <span>${arrival.hasPrediction === false ? (arrival.destination ? `${arrival.destination}행` : '현재 예측 차량 없음') : `${arrival.locationNo ? `${arrival.locationNo}번째 전` : '도착 정보 확인 중'}${arrival.nextMinutes ? ` · 다음 ${arrival.nextMinutes}분` : ''}${arrival.destination ? ` · ${arrival.destination}행` : ''}`}</span>
@@ -678,7 +694,7 @@ function renderBusArrivals(data) {
       </div>
     `).join('') : '<div class="bus-empty">현재 표시할 도착 정보가 없습니다.</div>';
     return `
-      <div class="bus-station-card">
+      <div id="${station.anchorId || `stop-${station.mapNo || 'x'}`}" class="bus-station-card">
         <div class="bus-station-title">
           <span>${station.mapNo ? `<b class="map-no">${station.mapNo}</b> ` : ''}${station.stationName}${station.mobileNo ? ` <em>${station.mobileNo}</em>` : ''}</span>
           <small>${station.distance || ''}</small>
@@ -695,6 +711,11 @@ function renderBusArrivals(data) {
         <h2>${data.title || '이레하이니스 주변 버스 도착'}</h2>
       </div>
       <div class="bus-badge">실시간</div>
+    </div>
+    <div class="route-legend">
+      <span><i class="route-swatch route-green"></i> 일반/지선</span>
+      <span><i class="route-swatch route-blue"></i> 좌석/간선형</span>
+      <span><i class="route-swatch route-red"></i> 광역/M버스</span>
     </div>
     <div class="bus-grid">${stationHtml}</div>
     <div class="data-source">출처 ${data.source || '경기도 버스정보'} · 약 30초 캐시</div>

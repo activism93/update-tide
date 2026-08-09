@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="0">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <link rel="stylesheet" href="styles/ocean.css?v=2.7">
+    <link rel="stylesheet" href="styles/ocean.css?v=2.8">
 </head>
 <body>
     <div class="container">
@@ -32,7 +32,12 @@
                 </div>
                 <div class="bus-badge">이미지 안내</div>
             </div>
-            <img class="stop-map-image" src="assets/ire-bus-stops-map.svg?v=6" alt="월곶 이레하이니스 주변 풍림아파트상가와 월곶포구 정류소 위치 안내 지도">
+            <div class="stop-map-wrap">
+                <img class="stop-map-image" src="assets/ire-bus-stops-map.svg?v=6" alt="월곶 이레하이니스 주변 풍림아파트상가와 월곶포구 정류소 위치 안내 지도">
+                <button class="map-click-marker marker-1" type="button" onclick="scrollToBusStop('stop-1')" aria-label="1번 풍림아파트상가 25164 정류소 교통정보로 이동">1</button>
+                <button class="map-click-marker marker-2" type="button" onclick="scrollToBusStop('stop-2')" aria-label="2번 풍림아파트상가 25162 정류소 교통정보로 이동">2</button>
+                <button class="map-click-marker marker-3" type="button" onclick="scrollToBusStop('stop-3')" aria-label="3번 풍림아파트후문 25161 정류소 교통정보로 이동">3</button>
+            </div>
         </section>
 
         <section id="busInfoCard" class="resident-info-card bus-info-card">
@@ -47,6 +52,6 @@
         </section>
     </div>
 
-    <script src="js/ocean.js?v=3.2"></script>
+    <script src="js/ocean.js?v=3.3"></script>
 </body>
 </html>
