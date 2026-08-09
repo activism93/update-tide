@@ -640,15 +640,77 @@ function formatLastUpdated(value) {
     return `최근 업데이트 ${dateText}`;
 }
 
+async function loadBusArrivals() {
+  const card = document.getElementById('busInfoCard');
+  if (!card) return;
+  try {
+    const response = await fetch(new URL('api/bus/arrivals?t=' + Date.now(), window.location.href), { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.note || '버스 정보 조회 실패');
+    renderBusArrivals(data);
+  } catch (error) {
+    card.innerHTML = `
+      <div class="bus-card-header">
+        <div>
+          <div class="section-kicker">교통 정보</div>
+          <h2>월곶역 주변 버스</h2>
+        </div>
+        <div class="bus-badge">준비중</div>
+      </div>
+      <p class="bus-note">실시간 버스 정보를 잠시 불러오지 못했습니다. 곧 다시 시도해 주세요.</p>
+    `;
+  }
+}
+
+function renderBusArrivals(data) {
+  const card = document.getElementById('busInfoCard');
+  if (!card) return;
+  const stationHtml = (data.stations || []).map(station => {
+    const arrivals = (station.arrivals || []).slice(0, 4);
+    const arrivalHtml = arrivals.length ? arrivals.map(arrival => `
+      <div class="bus-arrival-row">
+        <div class="bus-route-no">${arrival.routeName}</div>
+        <div class="bus-arrival-main">
+          <strong>${arrival.minutes}분 후</strong>
+          <span>${arrival.locationNo ? `${arrival.locationNo}번째 전` : '도착 정보 확인 중'}${arrival.destination ? ` · ${arrival.destination}행` : ''}</span>
+        </div>
+        ${arrival.crowded ? `<div class="bus-crowd">${arrival.crowded}</div>` : ''}
+      </div>
+    `).join('') : '<div class="bus-empty">현재 표시할 도착 정보가 없습니다.</div>';
+    return `
+      <div class="bus-station-card">
+        <div class="bus-station-title">
+          <span>${station.stationName}</span>
+          <small>${station.mobileNo ? `정류소 ${station.mobileNo}` : ''}</small>
+        </div>
+        ${arrivalHtml}
+      </div>
+    `;
+  }).join('');
+  card.innerHTML = `
+    <div class="bus-card-header">
+      <div>
+        <div class="section-kicker">교통 정보</div>
+        <h2>${data.title || '월곶역 주변 버스 도착'}</h2>
+      </div>
+      <div class="bus-badge">실시간</div>
+    </div>
+    <div class="bus-grid">${stationHtml}</div>
+    <div class="data-source">출처 ${data.source || '경기도 버스정보'} · 약 30초 캐시</div>
+  `;
+}
+
 // 초기 로드 및 주기적 업데이트
 document.addEventListener('DOMContentLoaded', function() {
     lastKstDateKey = kstDateKeyFormatter.format(new Date());
     loadOceanData(false);
+    loadBusArrivals();
     startMinuteTicker();
     
     // 5분마다 자동 새로고침
     setInterval(() => {
         loadOceanData(true);
+        loadBusArrivals();
     }, 5 * 60 * 1000);
 });
 
@@ -656,4 +718,5 @@ document.addEventListener('DOMContentLoaded', function() {
 function forceRefresh() {
     console.log("Force refreshing ocean data...");
     loadOceanData(true);
+    loadBusArrivals();
 }
