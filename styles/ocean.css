@@ -779,6 +779,19 @@ body {
     white-space: nowrap;
 }
 
+.bus-station-title em {
+    display: inline-flex;
+    margin-left: 6px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(14, 116, 144, 0.1);
+    color: #0f7895;
+    font-style: normal;
+    font-size: 0.82em;
+    font-weight: 900;
+    vertical-align: middle;
+}
+
 .bus-direction {
     margin: -4px 0 10px;
     color: #0f7895;
