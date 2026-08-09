@@ -1170,3 +1170,177 @@ body {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
+/* Mobile polish overrides: keep these at the very end so older blocks cannot override them. */
+@media (max-width: 640px) {
+    body {
+        padding: 8px;
+        overflow-x: hidden;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 100%;
+        min-height: calc(100vh - 16px);
+    }
+
+    .header {
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        font-size: 1.72rem;
+        line-height: 1.12;
+        word-break: keep-all;
+    }
+
+    .subtitle {
+        font-size: 0.96rem;
+        line-height: 1.4;
+        word-break: keep-all;
+    }
+
+    .building-info {
+        width: 100%;
+        justify-content: center;
+        line-height: 1.35;
+        word-break: keep-all;
+    }
+
+    .ocean-overview,
+    .resident-info-card {
+        padding: 16px 12px;
+        border-radius: 22px;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .current-status,
+    .insight-grid,
+    .ocean-conditions,
+    .bus-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .insight-card {
+        grid-template-columns: 36px 1fr;
+        padding: 13px;
+    }
+
+    .insight-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 13px;
+    }
+
+    .condition-card {
+        padding: 14px;
+    }
+
+    .stop-map-card {
+        padding: 12px;
+    }
+
+    .stop-map-image {
+        width: 100%;
+        border-radius: 16px;
+    }
+
+    .map-click-marker {
+        width: 28px;
+        height: 28px;
+        border-width: 2px;
+        font-size: 0.82rem;
+    }
+
+    .bus-card-header {
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .bus-card-header h2 {
+        font-size: 1.15rem;
+        line-height: 1.25;
+    }
+
+    .route-legend {
+        gap: 6px;
+        font-size: 0.78em;
+    }
+
+    .route-legend span {
+        padding: 5px 7px;
+    }
+
+    .bus-station-card {
+        padding: 13px;
+        border-radius: 18px;
+    }
+
+    .bus-station-title {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .bus-station-title span {
+        min-width: 0;
+        line-height: 1.35;
+    }
+
+    .bus-arrival-row {
+        grid-template-columns: minmax(54px, auto) minmax(0, 1fr) minmax(38px, auto) 28px !important;
+        gap: 7px;
+        padding: 9px 0;
+    }
+
+    .bus-route-no {
+        min-width: 50px;
+        max-width: 70px;
+        padding: 6px 8px;
+        font-size: 0.78em;
+    }
+
+    .bus-arrival-main strong {
+        font-size: 0.94em;
+    }
+
+    .bus-arrival-main span,
+    .bus-empty {
+        font-size: 0.78em;
+        line-height: 1.35;
+    }
+
+    .bus-crowd {
+        min-width: 36px;
+        height: 24px;
+        padding: 0 7px;
+        font-size: 0.72em;
+    }
+
+    .route-pin-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.88em;
+    }
+
+    .data-source {
+        text-align: left;
+        font-size: 0.78em;
+        line-height: 1.4;
+    }
+}
+
+@media (max-width: 380px) {
+    .bus-arrival-row {
+        grid-template-columns: 1fr auto auto !important;
+        grid-template-areas:
+            "route crowd pin"
+            "main main main";
+    }
+    .bus-route-no { grid-area: route; justify-self: start; }
+    .bus-arrival-main { grid-area: main; }
+    .bus-crowd, .bus-crowd-placeholder { grid-area: crowd; grid-column: auto; }
+    .route-pin-btn { grid-area: pin; grid-column: auto; }
+}
