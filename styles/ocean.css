@@ -976,3 +976,28 @@ body {
 .bus-arrival-row.no-prediction .bus-route-no.route-green { background: #86efac; color: #14532d; }
 .bus-arrival-row.no-prediction .bus-route-no.route-blue { background: #93c5fd; color: #1e3a8a; }
 .bus-arrival-row.no-prediction .bus-route-no.route-red { background: #fca5a5; color: #7f1d1d; }
+
+
+.bus-station-card.bus-stop-highlight {
+    animation: busStopPulse 1.6s ease-out 1;
+    border-color: rgba(37, 99, 235, 0.72);
+}
+
+@keyframes busStopPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45), 0 10px 26px rgba(15, 76, 117, 0.07);
+        transform: translateY(0);
+    }
+    18% {
+        box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.22), 0 18px 42px rgba(37, 99, 235, 0.18);
+        transform: translateY(-2px);
+    }
+    48% {
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14), 0 14px 34px rgba(37, 99, 235, 0.12);
+        transform: translateY(0);
+    }
+    100% {
+        box-shadow: 0 10px 26px rgba(15, 76, 117, 0.07);
+        transform: translateY(0);
+    }
+}

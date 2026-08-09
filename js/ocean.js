@@ -653,7 +653,14 @@ function busRouteClass(routeName, routeTypeName) {
 
 function scrollToBusStop(anchorId) {
   const target = document.getElementById(anchorId);
-  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!target) return;
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  target.classList.remove('bus-stop-highlight');
+  // Restart the highlight animation even when the same marker is clicked repeatedly.
+  window.requestAnimationFrame(() => {
+    target.classList.add('bus-stop-highlight');
+    window.setTimeout(() => target.classList.remove('bus-stop-highlight'), 1800);
+  });
 }
 
 async function loadBusArrivals() {
