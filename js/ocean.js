@@ -82,6 +82,13 @@ function timeToMinutes(timeStr) {
     return h * 60 + m;
 }
 
+function easeTideProgress(progress) {
+    // Tide level changes are closer to a smooth harmonic curve than a straight line.
+    // 0 -> 0, 0.5 -> 0.5, 1 -> 1 with slower movement near high/low slack water.
+    const p = Math.min(1, Math.max(0, Number(progress) || 0));
+    return (1 - Math.cos(Math.PI * p)) / 2;
+}
+
 function buildTideEvents(highTides, lowTides, dayOffset) {
     const events = [];
 
@@ -171,18 +178,19 @@ function calculateCurrentTideLevel(tideEvents) {
     const total = Math.max(1, nextAbs - prevAbs);
     const elapsed = Math.min(total, Math.max(0, currentAbsMinutes - prevAbs));
     const progress = elapsed / total;
+    const easedProgress = easeTideProgress(progress);
 
-    const currentHeight = prev.height + (next.height - prev.height) * progress;
+    const currentHeight = prev.height + (next.height - prev.height) * easedProgress;
 
     // Percent: 0 = low, 100 = high within the current segment.
     let percentage = 50;
     let status = next.height >= prev.height ? '오름' : '내림';
 
     if (prev.type === 'low' && next.type === 'high') {
-        percentage = progress * 100;
+        percentage = easedProgress * 100;
         status = '오름';
     } else if (prev.type === 'high' && next.type === 'low') {
-        percentage = (1 - progress) * 100;
+        percentage = (1 - easedProgress) * 100;
         status = '내림';
     } else {
         const minH = Math.min(prev.height, next.height);
