@@ -816,7 +816,7 @@ body {
 
 .bus-arrival-row {
     display: grid;
-    grid-template-columns: minmax(62px, auto) 1fr auto 34px;
+    grid-template-columns: minmax(62px, auto) minmax(0, 1fr) minmax(42px, auto) 32px;
     gap: 11px;
     align-items: center;
     padding: 10px 0;
@@ -878,8 +878,7 @@ body {
 @media (max-width: 480px) {
     .resident-info-card { padding: 20px 15px; border-radius: 24px; }
     .bus-card-header { align-items: center; }
-    .bus-arrival-row { grid-template-columns: minmax(58px, auto) 1fr 32px; }
-    .bus-crowd { justify-self: start; }
+    .bus-arrival-row { grid-template-columns: minmax(58px, auto) minmax(0, 1fr) minmax(42px, auto) 30px; }
 }
 
 
@@ -1089,4 +1088,17 @@ body {
 .bus-crowd.crowd-매우 {
     background: #fecaca;
     color: #7f1d1d;
+}
+
+
+.bus-crowd, .bus-crowd-placeholder {
+    grid-column: 3;
+    justify-self: end;
+    align-self: center;
+}
+
+.route-pin-btn {
+    grid-column: 4;
+    justify-self: end;
+    align-self: center;
 }
