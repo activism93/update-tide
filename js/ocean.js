@@ -666,7 +666,7 @@ function renderBusArrivals(data) {
   const card = document.getElementById('busInfoCard');
   if (!card) return;
   const stationHtml = (data.stations || []).map(station => {
-    const arrivals = (station.arrivals || []).slice(0, 4);
+    const arrivals = (station.arrivals || []);
     const arrivalHtml = arrivals.length ? arrivals.map(arrival => `
       <div class="bus-arrival-row ${arrival.hasPrediction === false ? 'no-prediction' : ''}">
         <div class="bus-route-no">${arrival.routeName}</div>
