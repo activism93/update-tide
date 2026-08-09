@@ -1114,3 +1114,37 @@ body {
 .portal-login-card input { padding: 13px 14px; border: 1px solid rgba(14,116,144,.2); border-radius: 14px; font-size: 16px; }
 .portal-login-card button { border: 0; border-radius: 14px; padding: 14px; background: #0f7895; color: white; font-weight: 900; font-size: 16px; }
 .login-error { padding: 10px 12px; border-radius: 12px; background: #fef2f2; color: #b91c1c !important; font-weight: 800; }
+
+
+.insight-icon svg, .sun-icon svg {
+    width: 25px;
+    height: 25px;
+    display: block;
+}
+
+.insight-icon svg path,
+.insight-icon svg circle,
+.sun-icon svg path,
+.sun-icon svg circle {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.insight-icon {
+    color: #0f7895;
+}
+
+.sun-icon {
+    color: #f59e0b;
+    display: grid;
+    place-items: center;
+}
+
+.sun-icon svg {
+    width: 42px;
+    height: 42px;
+    margin: 0 auto;
+}

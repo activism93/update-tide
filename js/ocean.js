@@ -71,19 +71,35 @@ function getFlowLabel(status) {
     return status || '상태 확인 중';
 }
 
+function renderOceanIcon(type) {
+  const icons = {
+    wave: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 24c5.2 0 5.2-4 10.4-4s5.2 4 10.4 4 5.2-4 10.4-4"/><path d="M3.5 29.5c5.8 0 5.8-4.2 11.6-4.2s5.8 4.2 11.6 4.2 5.8-4.2 11.6-4.2"/><path d="M8 15.5c4.4-5.8 12.9-7.8 19.9-3.3 2.3 1.5 4.1 3.5 5.2 5.8"/></svg>',
+    view: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M5 25c4.5-6.2 9.5-9.3 15-9.3S30.5 18.8 35 25c-4.5 6.2-9.5 9.3-15 9.3S9.5 31.2 5 25Z"/><circle cx="20" cy="25" r="4.5"/><path d="M9 12h22"/><path d="M13 7h14"/></svg>',
+    flats: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 26h28"/><path d="M9 20h7l3-5 4 9 3-4h5"/><path d="M7 31c4 1.7 8 1.7 12 0s8-1.7 12 0"/><circle cx="29" cy="11" r="3"/></svg>',
+    low: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M7 27h26"/><path d="M10 22c2.5-2 5-3 7.5-3s5 1 7.5 3 5 3 7.5 3"/><path d="M12 14h16"/><path d="M16 10h8"/></svg>',
+    rising: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 28h24"/><path d="M10 23c4 0 4-3 8-3s4 3 8 3 4-3 8-3"/><path d="M14 14h12"/><path d="M25 8l6 6-6 6"/><path d="M14 14h17"/></svg>',
+    falling: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 28h24"/><path d="M10 23c4 0 4-3 8-3s4 3 8 3 4-3 8-3"/><path d="M14 14h17"/><path d="M25 20l6-6-6-6"/></svg>',
+    steady: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 28h24"/><path d="M10 22c4 0 4-3 8-3s4 3 8 3 4-3 8-3"/><path d="M12 12h16"/><path d="M16 8l-4 4 4 4"/><path d="M24 8l4 4-4 4"/></svg>',
+    sunset: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28h26"/><path d="M11 23a9 9 0 0 1 18 0"/><path d="M20 6v6"/><path d="M9 12l4 4"/><path d="M31 12l-4 4"/><path d="M13 33h14"/></svg>',
+    sunrise: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28h26"/><path d="M11 23a9 9 0 0 1 18 0"/><path d="M20 13V7"/><path d="M16 10l4-4 4 4"/><path d="M9 15l4 3"/><path d="M31 15l-4 3"/></svg>',
+    moon: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M26.5 29.5c-8 0-14.5-6.5-14.5-14.5 0-3.1 1-6 2.7-8.3C8.8 9 5 14.6 5 21c0 8.3 6.7 15 15 15 6.4 0 12-3.8 14.3-9.7-2.3 2-5 3.2-7.8 3.2Z"/><path d="M28 8l1.2 2.8L32 12l-2.8 1.2L28 16l-1.2-2.8L24 12l2.8-1.2L28 8Z"/></svg>'
+  };
+  return icons[type] || icons.view;
+}
+
 function getViewMood(tideLevel) {
     const pct = Number(tideLevel && tideLevel.percentage) || 0;
-    if (pct >= 82) return { icon: '🌊', title: '오션감 극대화', text: '수위가 높은 시간대라 창밖 수면감이 가장 풍부하게 느껴집니다.' };
-    if (pct >= 55) return { icon: '✨', title: '조망 균형 좋음', text: '수면이 충분히 차올라 안정적인 오션뷰를 보기 좋은 구간입니다.' };
-    if (pct >= 28) return { icon: '🪨', title: '갯벌·수로 변화', text: '물이 오가며 포구와 갯벌의 질감 변화가 잘 보이는 시간대입니다.' };
-    return { icon: '🦀', title: '간조 풍경', text: '수위가 낮아 갯벌과 포구 라인이 선명하게 드러나는 구간입니다.' };
+    if (pct >= 82) return { iconType: 'wave', title: '오션감 극대화', text: '수위가 높은 시간대라 창밖 수면감이 가장 풍부하게 느껴집니다.' };
+    if (pct >= 55) return { iconType: 'view', title: '조망 균형 좋음', text: '수면이 충분히 차올라 안정적인 오션뷰를 보기 좋은 구간입니다.' };
+    if (pct >= 28) return { iconType: 'flats', title: '갯벌·수로 변화', text: '물이 오가며 포구와 갯벌의 질감 변화가 잘 보이는 시간대입니다.' };
+    return { iconType: 'low', title: '간조 풍경', text: '수위가 낮아 갯벌과 포구 라인이 선명하게 드러나는 구간입니다.' };
 }
 
 function getFlowInsight(tideLevel) {
     const nextType = getTideTypeLabel(tideLevel.nextTide && tideLevel.nextTide.type);
     const flow = getFlowLabel(tideLevel.status);
     return {
-        icon: tideLevel.status === '오름' ? '↗️' : tideLevel.status === '내림' ? '↘️' : '↔️',
+        iconType: tideLevel.status === '오름' ? 'rising' : tideLevel.status === '내림' ? 'falling' : 'steady',
         title: flow,
         text: `다음 ${nextType}까지 ${formatDuration(tideLevel.timeToNext)} 남았습니다.`
     };
@@ -91,12 +107,12 @@ function getFlowInsight(tideLevel) {
 
 function getGoldenHourInsight(sunStatus, sunset) {
     if (sunStatus && sunStatus.status === '낮') {
-        return { icon: '🌇', title: '오늘의 석양 체크', text: `일몰은 ${sunset || '--:--'}입니다. 해질녘에는 수면 반사가 살아납니다.` };
+        return { iconType: 'sunset', title: '오늘의 석양 체크', text: `일몰은 ${sunset || '--:--'}입니다. 해질녘에는 수면 반사가 살아납니다.` };
     }
     if (sunStatus && sunStatus.status === '일출 전') {
-        return { icon: '🌅', title: '아침 조망 준비', text: `${sunStatus.time || '--:--'} 일출 전후로 포구 색감이 가장 부드럽습니다.` };
+        return { iconType: 'sunrise', title: '아침 조망 준비', text: `${sunStatus.time || '--:--'} 일출 전후로 포구 색감이 가장 부드럽습니다.` };
     }
-    return { icon: '🌙', title: '야간 포구 무드', text: '일몰 후에는 조명과 수면 반사가 차분한 야경을 만듭니다.' };
+    return { iconType: 'moon', title: '야간 포구 무드', text: '일몰 후에는 조명과 수면 반사가 차분한 야경을 만듭니다.' };
 }
 
 function timeToMinutes(timeStr) {
@@ -255,15 +271,15 @@ function getSunStatus(sunrise, sunset) {
         const sunsetMinutes = ssHour * 60 + ssMin;
         
         if (currentMinutes < sunriseMinutes) {
-            return { status: '일출 전', icon: '🌅', time: sunrise };
+            return { status: '일출 전', iconType: 'sunrise', time: sunrise };
         } else if (currentMinutes < sunsetMinutes) {
-            return { status: '낮', icon: '☀️', time: sunset };
+            return { status: '낮', iconType: 'sunset', time: sunset };
         } else {
-            return { status: '일몰 후', icon: '🌙', time: sunrise };
+            return { status: '일몰 후', iconType: 'moon', time: sunrise };
         }
     }
     
-    return { status: '알 수 없음', icon: '🌅', time: '--:--' };
+    return { status: '알 수 없음', iconType: 'sunrise', time: '--:--' };
 }
 
 async function loadOceanData(forceReload = false) {
@@ -502,11 +518,11 @@ function displaySampleOceanData() {
         nextTide: { time: "18:45", height: 280, type: 'high' },
         timeToNext: 120
     },
-    sunStatus: { status: '낮', icon: '☀️', time: "18:45" },
+    sunStatus: { status: '낮', iconType: 'sunset', time: "18:45" },
     insights: [
-      { icon: '✨', title: '조망 균형 좋음', text: '수면이 충분히 차올라 안정적인 오션뷰를 보기 좋은 구간입니다.' },
+      { iconType: 'view', title: '조망 균형 좋음', text: '수면이 충분히 차올라 안정적인 오션뷰를 보기 좋은 구간입니다.' },
       { icon: '↗️', title: '물이 차오르는 중', text: '다음 만조까지 2시간 후 남았습니다.' },
-      { icon: '🌇', title: '오늘의 석양 체크', text: '일몰 전후로 수면 반사가 살아납니다.' }
+      { iconType: 'sunset', title: '오늘의 석양 체크', text: '일몰 전후로 수면 반사가 살아납니다.' }
     ]
   };
 
@@ -521,7 +537,7 @@ function displayOceanOverview(data) {
 
   const insightCards = (data.insights || []).map(item => `
     <div class="insight-card">
-      <div class="insight-icon">${item.icon}</div>
+      <div class="insight-icon">${renderOceanIcon(item.iconType)}</div>
       <div>
         <div class="insight-title">${item.title}</div>
         <div class="insight-text">${item.text}</div>
@@ -553,7 +569,7 @@ function displayOceanOverview(data) {
         </div>
         
         <div class="sun-position">
-          <div class="sun-icon" id="oceanSunIcon">${data.sunStatus.icon}</div>
+          <div class="sun-icon" id="oceanSunIcon">${renderOceanIcon(data.sunStatus.iconType)}</div>
           <div class="sun-status" id="oceanSunStatus">${data.sunStatus.status}</div>
           <div class="sun-time" id="oceanSunTime">${data.sunStatus.time}</div>
         </div>
