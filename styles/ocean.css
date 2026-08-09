@@ -1001,3 +1001,23 @@ body {
         transform: translateY(0);
     }
 }
+
+
+.bus-arrival-row.pinned-route {
+    background: linear-gradient(90deg, rgba(250, 204, 21, 0.12), rgba(255,255,255,0));
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 14px;
+}
+
+.pin-dot {
+    display: inline-block;
+    margin-right: 3px;
+    font-size: 0.78em;
+    transform: translateY(-1px);
+}
+
+.legend-pin {
+    font-size: 0.9em;
+}

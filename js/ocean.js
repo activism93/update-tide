@@ -691,8 +691,8 @@ function renderBusArrivals(data) {
   const stationHtml = (data.stations || []).map(station => {
     const arrivals = (station.arrivals || []);
     const arrivalHtml = arrivals.length ? arrivals.map(arrival => `
-      <div class="bus-arrival-row ${arrival.hasPrediction === false ? 'no-prediction' : ''}">
-        <div class="bus-route-no ${busRouteClass(arrival.routeName, arrival.routeTypeName)}">${arrival.routeName}</div>
+      <div class="bus-arrival-row ${arrival.hasPrediction === false ? 'no-prediction' : ''} ${arrival.isPinned ? 'pinned-route' : ''}">
+        <div class="bus-route-no ${busRouteClass(arrival.routeName, arrival.routeTypeName)}">${arrival.isPinned ? '<span class="pin-dot">📌</span>' : ''}${arrival.routeName}</div>
         <div class="bus-arrival-main">
           <strong>${arrival.hasPrediction === false ? (arrival.statusText || '도착 예정 없음') : `${arrival.minutes}분 후`}</strong>
           <span>${arrival.hasPrediction === false ? (arrival.destination ? `${arrival.destination}행` : '현재 예측 차량 없음') : `${arrival.locationNo ? `${arrival.locationNo}번째 전` : '도착 정보 확인 중'}${arrival.nextMinutes ? ` · 다음 ${arrival.nextMinutes}분` : ''}${arrival.destination ? ` · ${arrival.destination}행` : ''}`}</span>
@@ -723,6 +723,7 @@ function renderBusArrivals(data) {
       <span><i class="route-swatch route-green"></i> 일반/지선</span>
       <span><i class="route-swatch route-blue"></i> 좌석/간선형</span>
       <span><i class="route-swatch route-red"></i> 광역/M버스</span>
+      <span><b class="legend-pin">📌</b> 주요 노선 상단 고정</span>
     </div>
     <div class="bus-grid">${stationHtml}</div>
     <div class="data-source">출처 ${data.source || '경기도 버스정보'} · 약 30초 캐시</div>
