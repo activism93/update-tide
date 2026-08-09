@@ -657,6 +657,14 @@ function normalizeRouteName(routeName) {
   return String(routeName || '').trim().toUpperCase();
 }
 
+function normalizeStopKey(stopKey) {
+  return String(stopKey || '').trim().toLowerCase();
+}
+
+function makePinKey(stopKey, routeName) {
+  return `${normalizeStopKey(stopKey)}::${normalizeRouteName(routeName)}`;
+}
+
 function getPinnedRoutes() {
   try {
     return new Set(JSON.parse(localStorage.getItem(BUS_PIN_STORAGE_KEY) || '[]'));
@@ -669,9 +677,9 @@ function savePinnedRoutes(pins) {
   localStorage.setItem(BUS_PIN_STORAGE_KEY, JSON.stringify([...pins]));
 }
 
-function toggleBusRoutePin(routeName) {
-  const key = normalizeRouteName(routeName);
-  if (!key) return;
+function toggleBusRoutePin(stopKey, routeName) {
+  const key = makePinKey(stopKey, routeName);
+  if (!key || key.endsWith('::')) return;
   const pins = getPinnedRoutes();
   if (pins.has(key)) pins.delete(key);
   else pins.add(key);
@@ -679,12 +687,12 @@ function toggleBusRoutePin(routeName) {
   loadBusArrivals();
 }
 
-function applyUserPinnedSort(arrivals) {
+function applyUserPinnedSort(stopKey, arrivals) {
   const pins = getPinnedRoutes();
   return [...(arrivals || [])]
     .map((arrival, index) => ({
       ...arrival,
-      isUserPinned: pins.has(normalizeRouteName(arrival.routeName)),
+      isUserPinned: pins.has(makePinKey(stopKey, arrival.routeName)),
       originalIndex: index
     }))
     .sort((a, b) => {
@@ -732,7 +740,8 @@ function renderBusArrivals(data) {
   const card = document.getElementById('busInfoCard');
   if (!card) return;
   const stationHtml = (data.stations || []).map(station => {
-    const arrivals = applyUserPinnedSort(station.arrivals || []);
+    const stopKey = station.anchorId || `stop-${station.mapNo || station.stationId || 'x'}`;
+    const arrivals = applyUserPinnedSort(stopKey, station.arrivals || []);
     const arrivalHtml = arrivals.length ? arrivals.map(arrival => `
       <div class="bus-arrival-row ${arrival.hasPrediction === false ? 'no-prediction' : ''} ${arrival.isUserPinned ? 'pinned-route' : ''}">
         <div class="bus-route-no ${busRouteClass(arrival.routeName, arrival.routeTypeName)}">${arrival.routeName}</div>
@@ -741,7 +750,7 @@ function renderBusArrivals(data) {
           <span>${arrival.hasPrediction === false ? (arrival.destination ? `${arrival.destination}행` : '현재 예측 차량 없음') : `${arrival.locationNo ? `${arrival.locationNo}번째 전` : '도착 정보 확인 중'}${arrival.nextMinutes ? ` · 다음 ${arrival.nextMinutes}분` : ''}${arrival.destination ? ` · ${arrival.destination}행` : ''}`}</span>
         </div>
         ${arrival.crowded ? `<div class="bus-crowd crowd-${arrival.crowded}">${arrival.crowded}</div>` : '<div class="bus-crowd-placeholder"></div>'}
-        <button class="route-pin-btn ${arrival.isUserPinned ? 'active' : ''}" type="button" onclick="toggleBusRoutePin('${String(arrival.routeName).replace(/'/g, "&#39;")}')" aria-label="${arrival.routeName} 노선 ${arrival.isUserPinned ? '고정 해제' : '상단 고정'}" title="${arrival.isUserPinned ? '고정 해제' : '상단 고정'}">${arrival.isUserPinned ? '📌' : '📍'}</button>
+        <button class="route-pin-btn ${arrival.isUserPinned ? 'active' : ''}" type="button" onclick="toggleBusRoutePin('${String(stopKey).replace(/'/g, "&#39;")}', '${String(arrival.routeName).replace(/'/g, "&#39;")}')" aria-label="${arrival.routeName} 노선 ${arrival.isUserPinned ? '고정 해제' : '상단 고정'}" title="${arrival.isUserPinned ? '고정 해제' : '상단 고정'}">${arrival.isUserPinned ? '📌' : '📍'}</button>
       </div>
     `).join('') : '<div class="bus-empty">현재 표시할 도착 정보가 없습니다.</div>';
     return `
