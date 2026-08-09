@@ -82,7 +82,8 @@ function renderOceanIcon(type) {
     steady: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 28h24"/><path d="M10 22c4 0 4-3 8-3s4 3 8 3 4-3 8-3"/><path d="M12 12h16"/><path d="M16 8l-4 4 4 4"/><path d="M24 8l4 4-4 4"/></svg>',
     sunset: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28h26"/><path d="M11 23a9 9 0 0 1 18 0"/><path d="M20 6v6"/><path d="M9 12l4 4"/><path d="M31 12l-4 4"/><path d="M13 33h14"/></svg>',
     sunrise: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28h26"/><path d="M11 23a9 9 0 0 1 18 0"/><path d="M20 13V7"/><path d="M16 10l4-4 4 4"/><path d="M9 15l4 3"/><path d="M31 15l-4 3"/></svg>',
-    moon: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M26.5 29.5c-8 0-14.5-6.5-14.5-14.5 0-3.1 1-6 2.7-8.3C8.8 9 5 14.6 5 21c0 8.3 6.7 15 15 15 6.4 0 12-3.8 14.3-9.7-2.3 2-5 3.2-7.8 3.2Z"/><path d="M28 8l1.2 2.8L32 12l-2.8 1.2L28 16l-1.2-2.8L24 12l2.8-1.2L28 8Z"/></svg>'
+    moon: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M26.5 29.5c-8 0-14.5-6.5-14.5-14.5 0-3.1 1-6 2.7-8.3C8.8 9 5 14.6 5 21c0 8.3 6.7 15 15 15 6.4 0 12-3.8 14.3-9.7-2.3 2-5 3.2-7.8 3.2Z"/><path d="M28 8l1.2 2.8L32 12l-2.8 1.2L28 16l-1.2-2.8L24 12l2.8-1.2L28 8Z"/></svg>',
+    location: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 35s11-9.3 11-20A11 11 0 0 0 9 15c0 10.7 11 20 11 20Z"/><circle cx="20" cy="15" r="3.8"/><path d="M14 35h12"/></svg>'
   };
   return icons[type] || icons.view;
 }
@@ -621,17 +622,17 @@ function displayOceanOverview(data) {
       
       <div class="ocean-conditions">
         <div class="condition-card">
-          <div class="condition-icon">🌅</div>
+          <div class="condition-icon">${renderOceanIcon('sunrise')}</div>
           <div class="condition-label">일출</div>
           <div class="condition-value">${data.sunrise}</div>
         </div>
         <div class="condition-card">
-          <div class="condition-icon">🌇</div>
+          <div class="condition-icon">${renderOceanIcon('sunset')}</div>
           <div class="condition-label">일몰</div>
           <div class="condition-value">${data.sunset}</div>
         </div>
         <div class="condition-card">
-          <div class="condition-icon">📍</div>
+          <div class="condition-icon">${renderOceanIcon('location')}</div>
           <div class="condition-label">위치</div>
           <div class="condition-value">${data.location || '월곶포구'}</div>
         </div>

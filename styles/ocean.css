@@ -1148,3 +1148,25 @@ body {
     height: 42px;
     margin: 0 auto;
 }
+
+
+.condition-icon {
+    color: #0f7895;
+    display: grid;
+    place-items: center;
+}
+
+.condition-icon svg {
+    width: 30px;
+    height: 30px;
+    display: block;
+}
+
+.condition-icon svg path,
+.condition-icon svg circle {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.05;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
