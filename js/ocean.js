@@ -740,7 +740,7 @@ function renderBusArrivals(data) {
           <strong>${arrival.hasPrediction === false ? (arrival.statusText || '도착 예정 없음') : `${arrival.minutes}분 후`}</strong>
           <span>${arrival.hasPrediction === false ? (arrival.destination ? `${arrival.destination}행` : '현재 예측 차량 없음') : `${arrival.locationNo ? `${arrival.locationNo}번째 전` : '도착 정보 확인 중'}${arrival.nextMinutes ? ` · 다음 ${arrival.nextMinutes}분` : ''}${arrival.destination ? ` · ${arrival.destination}행` : ''}`}</span>
         </div>
-        <button class="route-pin-btn ${arrival.isUserPinned ? 'active' : ''}" type="button" onclick="toggleBusRoutePin('${String(arrival.routeName).replace(/'/g, "&#39;")}')" aria-label="${arrival.routeName} 노선 ${arrival.isUserPinned ? '고정 해제' : '상단 고정'}">${arrival.isUserPinned ? '고정됨' : '핀'}</button>
+        <button class="route-pin-btn ${arrival.isUserPinned ? 'active' : ''}" type="button" onclick="toggleBusRoutePin('${String(arrival.routeName).replace(/'/g, "&#39;")}')" aria-label="${arrival.routeName} 노선 ${arrival.isUserPinned ? '고정 해제' : '상단 고정'}" title="${arrival.isUserPinned ? '고정 해제' : '상단 고정'}">${arrival.isUserPinned ? '📌' : '📍'}</button>
         ${arrival.crowded ? `<div class="bus-crowd crowd-${arrival.crowded}">${arrival.crowded}</div>` : ''}
       </div>
     `).join('') : '<div class="bus-empty">현재 표시할 도착 정보가 없습니다.</div>';
@@ -767,7 +767,7 @@ function renderBusArrivals(data) {
       <span><i class="route-swatch route-green"></i> 일반/지선</span>
       <span><i class="route-swatch route-blue"></i> 좌석/간선형</span>
       <span><i class="route-swatch route-red"></i> 광역/M버스</span>
-      <span><b class="legend-pin">핀</b> 노선 직접 고정</span>
+      <span><b class="legend-pin">📍/📌</b> 노선 직접 고정</span>
     </div>
     <div class="bus-grid">${stationHtml}</div>
     <div class="data-source">출처 ${data.source || '경기도 버스정보'} · 약 30초 캐시</div>
