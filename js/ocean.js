@@ -672,7 +672,7 @@ function renderBusArrivals(data) {
         <div class="bus-route-no">${arrival.routeName}</div>
         <div class="bus-arrival-main">
           <strong>${arrival.hasPrediction === false ? (arrival.statusText || '도착 예정 없음') : `${arrival.minutes}분 후`}</strong>
-          <span>${arrival.hasPrediction === false ? (arrival.destination ? `${arrival.destination}행` : '현재 예측 차량 없음') : `${arrival.locationNo ? `${arrival.locationNo}번째 전` : '도착 정보 확인 중'}${arrival.destination ? ` · ${arrival.destination}행` : ''}`}</span>
+          <span>${arrival.hasPrediction === false ? (arrival.destination ? `${arrival.destination}행` : '현재 예측 차량 없음') : `${arrival.locationNo ? `${arrival.locationNo}번째 전` : '도착 정보 확인 중'}${arrival.nextMinutes ? ` · 다음 ${arrival.nextMinutes}분` : ''}${arrival.destination ? ` · ${arrival.destination}행` : ''}`}</span>
         </div>
         ${arrival.crowded ? `<div class="bus-crowd">${arrival.crowded}</div>` : ''}
       </div>

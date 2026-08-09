@@ -10,6 +10,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 GG_BASE_ARRIVAL = 'https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalListv2'
 GG_BASE_STATION = 'https://apis.data.go.kr/6410000/busstationservice/v2/getBusStationListv2'
+GG_BASE_STATION_ROUTES = 'https://apis.data.go.kr/6410000/busstationservice/v2/getBusStationViaRouteListv2'
 CACHE_TTL = int(os.getenv('BUS_CACHE_TTL_SECONDS', '30'))
 CACHE = {}
 DEFAULT_STATIONS = [
@@ -88,6 +89,19 @@ def parse_arrivals(station):
     key = os.getenv('GYEONGGI_BUS_API_KEY') or os.getenv('SEOUL_API_KEY')
     if not key:
         return {**station, 'arrivals': [], 'note': '버스 API 키가 설정되지 않았습니다.'}
+
+    route_rows = []
+    try:
+        route_data = fetch_json(GG_BASE_STATION_ROUTES, {
+            'serviceKey': key,
+            'stationId': station['stationId'],
+            'format': 'json'
+        })
+        route_body = route_data.get('response', {}).get('msgBody', {})
+        route_rows = listify(route_body.get('busRouteList'))
+    except Exception:
+        route_rows = []
+
     data = fetch_json(GG_BASE_ARRIVAL, {
         'serviceKey': key,
         'stationId': station['stationId'],
@@ -96,43 +110,73 @@ def parse_arrivals(station):
     header = data.get('response', {}).get('msgHeader', {})
     body = data.get('response', {}).get('msgBody', {})
     rows = listify(body.get('busArrivalList'))
-    arrivals = []
+
+    routes = {}
+
+    def ensure_route(route_name, row=None):
+        route_name = str(route_name or '').strip()
+        if not route_name:
+            return None
+        item = routes.setdefault(route_name, {
+            'routeName': route_name,
+            'destination': '',
+            'routeTypeName': '',
+            'staOrder': None,
+            'predictions': [],
+            'hasPrediction': False,
+        })
+        if row:
+            item['destination'] = item['destination'] or str(row.get('routeDestName') or '')
+            item['routeTypeName'] = item['routeTypeName'] or str(row.get('routeTypeName') or '')
+            item['staOrder'] = item['staOrder'] if item['staOrder'] is not None else row.get('staOrder')
+        return item
+
+    for row in route_rows:
+        ensure_route(row.get('routeName'), row)
+
     for row in rows:
-        route = str(row.get('routeName') or row.get('routeId') or '')
-        added = False
+        route = ensure_route(row.get('routeName') or row.get('routeId'), row)
+        if not route:
+            continue
         for order in (1, 2):
             predict = row.get(f'predictTime{order}')
             if predict in (None, '', 0, '0'):
                 continue
-            added = True
-            arrivals.append({
-                'routeName': route,
+            route['hasPrediction'] = True
+            route['predictions'].append({
                 'minutes': int(predict),
                 'seconds': int(row.get(f'predictTimeSec{order}') or 0),
                 'locationNo': row.get(f'locationNo{order}') or '',
                 'plateNo': row.get(f'plateNo{order}') or '',
                 'crowded': crowd_label(row.get(f'crowded{order}')),
-                'destination': row.get('routeDestName') or '',
                 'lowPlate': str(row.get(f'lowPlate{order}')) == '1',
-                'hasPrediction': True,
             })
-        if not added and route:
-            arrivals.append({
-                'routeName': route,
-                'minutes': None,
-                'seconds': None,
-                'locationNo': '',
-                'plateNo': '',
-                'crowded': '',
-                'destination': row.get('routeDestName') or '',
-                'lowPlate': False,
-                'hasPrediction': False,
-                'statusText': '도착 예정 없음',
-            })
-    arrivals.sort(key=lambda x: (x['minutes'] is None, x['minutes'] or 9999, x['seconds'] or 9999, str(x['routeName'])))
+
+    arrivals = []
+    for route in routes.values():
+        route['predictions'].sort(key=lambda x: (x['minutes'], x['seconds']))
+        first = route['predictions'][0] if route['predictions'] else None
+        second = route['predictions'][1] if len(route['predictions']) > 1 else None
+        arrivals.append({
+            'routeName': route['routeName'],
+            'minutes': first['minutes'] if first else None,
+            'seconds': first['seconds'] if first else None,
+            'locationNo': first['locationNo'] if first else '',
+            'plateNo': first['plateNo'] if first else '',
+            'crowded': first['crowded'] if first else '',
+            'destination': route['destination'],
+            'routeTypeName': route['routeTypeName'],
+            'staOrder': route['staOrder'],
+            'lowPlate': first['lowPlate'] if first else False,
+            'hasPrediction': bool(first),
+            'statusText': '' if first else '도착 예정 없음',
+            'nextMinutes': second['minutes'] if second else None,
+        })
+
+    arrivals.sort(key=lambda x: (x['minutes'] is None, x['minutes'] or 9999, str(x['routeName'])))
     return {
         **station,
-        'arrivals': arrivals[:8],
+        'arrivals': arrivals,
         'resultCode': header.get('resultCode'),
         'resultMessage': header.get('resultMessage'),
         'updatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
