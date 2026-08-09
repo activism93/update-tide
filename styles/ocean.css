@@ -816,7 +816,7 @@ body {
 
 .bus-arrival-row {
     display: grid;
-    grid-template-columns: minmax(62px, auto) 1fr 38px auto;
+    grid-template-columns: minmax(62px, auto) 1fr auto 62px;
     gap: 11px;
     align-items: center;
     padding: 10px 0;
@@ -829,7 +829,7 @@ body {
     max-width: 82px;
     text-align: center;
     padding: 6px 10px;
-    border-radius: 12px;
+    border-radius: 999px;
     background: #0f7895;
     color: white;
     font-weight: 900;
@@ -871,7 +871,7 @@ body {
 @media (max-width: 480px) {
     .resident-info-card { padding: 20px 15px; border-radius: 24px; }
     .bus-card-header { align-items: center; }
-    .bus-arrival-row { grid-template-columns: minmax(58px, auto) 1fr 34px; }
+    .bus-arrival-row { grid-template-columns: minmax(58px, auto) 1fr 58px; }
     .bus-crowd { grid-column: 2; justify-self: start; }
 }
 
@@ -1024,12 +1024,14 @@ body {
 
 
 .route-pin-btn {
-    width: 32px;
+    min-width: 54px;
     height: 32px;
+    padding: 0 10px;
     border: 1px solid rgba(14, 116, 144, 0.16);
     border-radius: 12px;
     background: rgba(255,255,255,0.78);
-    color: #78909c;
+    color: #60788a;
+    font-size: 0.82em;
     font-weight: 950;
     cursor: pointer;
     display: inline-grid;
@@ -1057,5 +1059,26 @@ body {
 }
 
 @media (max-width: 480px) {
-    .route-pin-btn { width: 30px; height: 30px; }
+    .route-pin-btn { min-width: 50px; height: 30px; padding: 0 8px; }
+}
+
+
+.bus-crowd.crowd-여유 {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.bus-crowd.crowd-보통 {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.bus-crowd.crowd-혼잡 {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.bus-crowd.crowd-매우 {
+    background: #fecaca;
+    color: #7f1d1d;
 }
