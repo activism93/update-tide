@@ -872,8 +872,10 @@ function renderTrainMarker(train, stations, orderIndex) {
   const precisionClass = isEstimated ? 'estimated' : 'realtime';
   const label = isEstimated ? (train.trainNo || '') : (train.etaLabel || (train.etaSeconds != null ? `${Math.round(train.etaSeconds / 60)}분` : train.destination || ''));
   const isWholeLinePosition = train.predictionSource === 'LINE_REALTIME_POSITION';
-  const subLabel = isWholeLinePosition
-    ? (train.reachesWolgot === false ? `${train.destination || '타 종착'} · 월곶 안 감` : `${train.trainNo || ''} · 월곶 도착 예상`)
+  const subLabelHtml = isWholeLinePosition
+    ? (train.reachesWolgot === false
+      ? `<small>${escapeHtml(train.destination || '타 종착')}</small><small>월곶 안 감</small>`
+      : `<small>${escapeHtml(train.trainNo || '')} · 월곶 도착 예상</small>`)
     : '';
   const precisionLabel = train.positionPrecision === 'estimated' ? '월곶 이후 추정 위치' : (isWholeLinePosition ? '수인분당선 전체 위치 참고' : '실시간 위치');
   const routeLabel = train.reachesWolgot === false ? '월곶 미경유/월곶 전 종착' : '월곶 도착 대상';
@@ -881,7 +883,7 @@ function renderTrainMarker(train, stations, orderIndex) {
   return `
     <button class="train-position-marker ${dirClass} ${precisionClass} ${isWholeLinePosition ? 'whole-line' : ''}" type="button" data-position-precision="${escapeHtml(train.positionPrecision || 'realtime')}" data-map-state="${escapeHtml(train.mapState || 'REALTIME_TRACKED')}" data-reaches-wolgot="${escapeHtml(train.reachesWolgot ?? '')}" data-logical-position="${logical}" data-row-offset="${rowOffset}" style="--train-offset:${lateral}px" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">
       <span class="train-marker ${dirClass}"><i aria-hidden="true"></i></span>
-      <span class="train-label-text"><b>${escapeHtml(label)}</b>${subLabel ? `<small>${escapeHtml(subLabel)}</small>` : ''}</span>
+      <span class="train-label-text"><b>${escapeHtml(label)}</b>${subLabelHtml}</span>
     </button>
   `;
 }
