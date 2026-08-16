@@ -2343,11 +2343,32 @@ body {
     pointer-events: auto;
     box-shadow: 0 5px 16px rgba(15,76,117,0.22);
 }
+.train-label-text {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    min-width: 0;
+}
 .train-position-marker b {
     color: #123b5d;
     font-size: 11px;
     font-weight: 950;
     white-space: nowrap;
+    line-height: 1.05;
+}
+.train-position-marker small {
+    color: #64748b;
+    font-size: 9px;
+    font-weight: 850;
+    line-height: 1.05;
+    white-space: nowrap;
+}
+.train-position-marker.whole-line[data-reaches-wolgot="false"] {
+    opacity: 0.82;
+}
+.train-position-marker.whole-line[data-reaches-wolgot="false"] small {
+    color: #b45309;
 }
 .train-position-marker.estimated {
     background: rgba(255,255,255,0.94);
