@@ -1355,10 +1355,20 @@ def handle_subway_arrivals(handler, query=None):
                     key=lambda p: p.get('etaSeconds') or 999999,
                 )
                 if direction_line_positions:
-                    has_non_fallback = any(a.get('direction') == direction and a.get('predictionSource') != 'TIMETABLE_ONLY' for a in arrivals)
                     arrivals = [a for a in arrivals if not (a.get('direction') == direction and a.get('predictionSource') == 'TIMETABLE_ONLY')]
-                    if not has_non_fallback:
-                        arrivals.append(line_position_to_arrival(direction_line_positions[0]))
+                    direction_arrivals = [a for a in arrivals if a.get('direction') == direction]
+                    seen_arrival_trains = {a.get('trainNo') for a in direction_arrivals if a.get('trainNo')}
+                    for position in direction_line_positions:
+                        if len(direction_arrivals) >= 2:
+                            break
+                        train_no = position.get('trainNo')
+                        if train_no and train_no in seen_arrival_trains:
+                            continue
+                        arrival = line_position_to_arrival(position)
+                        arrivals.append(arrival)
+                        direction_arrivals.append(arrival)
+                        if train_no:
+                            seen_arrival_trains.add(train_no)
             arrivals.sort(key=lambda x: (x.get('direction') or '', x.get('etaSeconds') if x.get('etaSeconds') is not None else 999999))
             seen_train_numbers = {p.get('trainNo') for p in train_positions if p.get('trainNo')}
             train_positions.extend(p for p in line_positions if not p.get('trainNo') or p.get('trainNo') not in seen_train_numbers)

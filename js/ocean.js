@@ -932,6 +932,19 @@ function scheduleSubwayTrainMarkerSync() {
   requestAnimationFrame(() => syncSubwayTrainMarkerPositions(document));
 }
 
+function focusSubwayMapsOnWolgot(root = document) {
+  const maps = root.querySelectorAll ? root.querySelectorAll('.subway-position-map') : [];
+  maps.forEach(map => {
+    const scroll = map.querySelector('.subway-map-scroll');
+    const target = map.querySelector('.target-station');
+    if (!scroll || !target || map.offsetParent === null) return;
+    const targetCenter = target.offsetTop + target.offsetHeight / 2;
+    const desired = Math.max(0, targetCenter - scroll.clientHeight / 2);
+    scroll.scrollTop = Math.min(desired, scroll.scrollHeight - scroll.clientHeight);
+  });
+  scheduleSubwayTrainMarkerSync();
+}
+
 window.addEventListener('resize', scheduleSubwayTrainMarkerSync);
 window.addEventListener('load', scheduleSubwayTrainMarkerSync);
 
@@ -1028,6 +1041,7 @@ function renderSubwayArrivals(data) {
     <div class="data-source">출처 ${data.source || '지하철 실시간 도착정보'} · 약 15초 캐시</div>
   `;
   scheduleSubwayTrainMarkerSync();
+  requestAnimationFrame(() => focusSubwayMapsOnWolgot(card));
 }
 
 function scrollToOceanSection(section) {
