@@ -1650,10 +1650,21 @@ body {
     font-weight: 950;
 }
 
-.subway-map-head span {
+.subway-map-meta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+}
+.subway-map-head span,
+.subway-map-meta span {
     color: #60788a;
     font-size: 0.86em;
     font-weight: 800;
+}
+.subway-map-meta span {
+    text-align: right;
 }
 
 .subway-map-scroll {
@@ -2466,10 +2477,22 @@ body {
 }
 @media (max-width: 720px) {
     .subway-map-head {
-        grid-template-columns: 1fr auto;
         display: grid;
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: 6px;
     }
-    .subway-map-head span {
-        grid-column: 1 / -1;
+    .subway-map-meta {
+        justify-content: flex-start;
+        max-width: 100%;
+    }
+    .subway-map-meta span {
+        text-align: left;
+        flex: 0 1 auto;
+    }
+    .subway-map-refresh {
+        width: 26px;
+        height: 26px;
+        font-size: 15px;
     }
 }

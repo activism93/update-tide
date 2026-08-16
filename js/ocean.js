@@ -970,8 +970,10 @@ function renderSubwayDirectionMap(direction, arrivals, trainPositions = []) {
     <div class="subway-position-map ${direction === '하행' ? 'down' : 'up'}">
       <div class="subway-map-head">
         <strong><b class="subway-direction-arrow ${direction === '상행' ? 'up' : 'down'}">${directionArrow}</b>${direction} 실시간 위치</strong>
-        <span>${terminal} · ${directionLabel}${directionPositions[0]?.positionTimestamp ? ` · ${directionPositions[0].positionTimestamp.slice(11,16)} 기준` : ' · 현재 운행 위치 없음'}</span>
-        <button class="subway-map-refresh" type="button" onclick="loadSubwayArrivals()" aria-label="${direction} 지하철 실시간 위치 새로고침">↻</button>
+        <div class="subway-map-meta">
+          <span>${terminal} · ${directionLabel}${directionPositions[0]?.positionTimestamp ? ` · ${directionPositions[0].positionTimestamp.slice(11,16)} 기준` : ' · 현재 운행 위치 없음'}</span>
+          <button class="subway-map-refresh" type="button" onclick="loadSubwayArrivals()" aria-label="${direction} 지하철 실시간 위치 새로고침">↻</button>
+        </div>
       </div>
       <div class="subway-map-scroll">
         <div class="subway-line-vertical ${direction === '하행' ? 'down' : 'up'}" aria-hidden="true"></div>
