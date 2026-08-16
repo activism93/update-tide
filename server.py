@@ -737,6 +737,24 @@ def build_line_position_from_realtime(row, now):
         progress = max(0.05, min(0.9, elapsed / duration))
     logical = forced_logical if forced_logical is not None else start_idx + (end_idx - start_idx) * progress
     destination = f'{terminal_station}행' if terminal_station else ''
+    eta_seconds = None
+    eta_label = train_no
+    if terminal_station in WOLGOT_ROUTE:
+        terminal_idx = WOLGOT_ROUTE.index(terminal_station)
+        current_idx = WOLGOT_ROUTE.index(current_station)
+        reaches_wolgot = (direction == '하행' and current_idx <= WOLGOT_INDEX <= terminal_idx) or (direction == '상행' and current_idx >= WOLGOT_INDEX >= terminal_idx)
+        if reaches_wolgot:
+            route_to_wolgot = WOLGOT_ROUTE[current_idx:WOLGOT_INDEX + 1] if direction == '하행' else WOLGOT_ROUTE[WOLGOT_INDEX:current_idx + 1][::-1]
+            remaining = 0
+            for a, b in zip(route_to_wolgot, route_to_wolgot[1:]):
+                remaining += adjacent_segment_seconds(a, b, direction)
+            # If the train is already moving through the first segment, discount
+            # roughly by its inferred segment progress.
+            if route_to_wolgot and len(route_to_wolgot) > 1:
+                first_duration = adjacent_segment_seconds(route_to_wolgot[0], route_to_wolgot[1], direction)
+                remaining = max(0, remaining - first_duration * progress)
+            eta_seconds = round(remaining)
+            eta_label = format_display_minutes(round(eta_seconds / 60))
     return {
         'trainId': train_no or f"{direction}-{current_station}-{terminal_station}",
         'trainNo': train_no,
@@ -758,8 +776,8 @@ def build_line_position_from_realtime(row, now):
         'elapsedSeconds': round(elapsed),
         'logicalPosition': round(logical, 3),
         'targetStation': '월곶',
-        'etaSeconds': None,
-        'etaLabel': train_no,
+        'etaSeconds': eta_seconds,
+        'etaLabel': eta_label,
         'confidence': 'high' if fresh_status == 'FRESH_STRONG' else 'medium',
         'validationStatus': 'accepted',
         'predictionSource': 'LINE_REALTIME_POSITION',
@@ -768,6 +786,8 @@ def build_line_position_from_realtime(row, now):
         'lastRealtimeStation': current_station,
         'routeValidation': 'ROUTE_OK',
         'routeReason': '수인분당선 전체 실시간 위치 API',
+        'terminalStation': terminal_station,
+        'reachesWolgot': eta_seconds is not None,
     }
 
 
