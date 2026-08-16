@@ -9,50 +9,84 @@
     <meta http-equiv="Expires" content="0">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <link rel="stylesheet" href="styles/ocean.css?v=4.0">
+    <link rel="stylesheet" href="styles/ocean.css?v=7.6">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌊 월곶 이레하이니스</h1>
-            <div class="subtitle">입주자가 매일 확인하는 월곶 포구 오션 브리핑</div>
-            <div class="building-info">실시간 조수 · 일출/일몰 · 오늘의 조망 포인트</div>
-            <button class="refresh-btn" onclick="loadOceanData(true)">🔄 정보 새로고침</button>
+            <h1>월곶 이레하이니스</h1>
+            <div class="subtitle">입주자가 매일 확인하는 월곶 포구 생활 정보</div>
+            <div class="building-info">실시간 조수 · 일출/일몰 · 교통 정보</div>
+            <button class="refresh-btn" onclick="forceRefresh()" aria-label="정보 새로고침">
+                <svg class="refresh-icon" viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M16.2 8.6A6.3 6.3 0 0 0 4.4 6.5M4 3.8v3.6h3.6"/>
+                    <path d="M3.8 11.4a6.3 6.3 0 0 0 11.8 2.1M16 16.2v-3.6h-3.6"/>
+                </svg>
+                <span>정보 새로고침</span>
+            </button>
         </div>
 
-        <div id="oceanContainer">
-            <div class="loading">오션 정보를 불러오는 중...</div>
-        </div>
+        <section class="resident-info-card transport-tabs-card">
+            <div class="transport-tabs" role="tablist" aria-label="생활 정보 선택">
+                <button class="transport-tab active" type="button" role="tab" aria-selected="true" aria-controls="oceanPanel" onclick="switchInfoTab('ocean')">바다·날씨</button>
+                <button class="transport-tab" type="button" role="tab" aria-selected="false" aria-controls="busPanel" onclick="switchInfoTab('bus')">버스 정류장</button>
+                <button class="transport-tab" type="button" role="tab" aria-selected="false" aria-controls="subwayPanel" onclick="switchInfoTab('subway')">월곶역 지하철</button>
+            </div>
 
-        <section class="resident-info-card stop-map-card">
-            <div class="bus-card-header">
-                <div>
-                    <div class="section-kicker">정류소 위치</div>
-                    <h2>이레하이니스 주변 정류소</h2>
+            <div id="oceanPanel" class="transport-panel active" role="tabpanel">
+                <div class="ocean-subtabs" aria-label="바다 날씨 바로가기">
+                    <button class="ocean-subtab" type="button" onclick="scrollToOceanSection('sea')">오늘의 바다</button>
+                    <button class="ocean-subtab" type="button" onclick="scrollToOceanSection('weather')">오늘의 날씨</button>
                 </div>
-                <div class="bus-badge">이미지 안내</div>
+                <div id="oceanContainer">
+                    <div class="loading">오션 정보를 불러오는 중...</div>
+                </div>
             </div>
-            <div class="stop-map-wrap">
-                <img class="stop-map-image" src="assets/ire-bus-stops-map.svg?v=9" alt="월곶 이레하이니스 주변 풍림아파트상가와 월곶포구 정류소 위치 안내 지도">
-                <div class="stop-map-hint">지도 번호를 누르면 정류소 정보로 이동합니다.</div>
-                <button class="map-click-marker marker-1" type="button" onclick="scrollToBusStop('stop-1')" aria-label="1번 풍림아파트상가 25164 정류소 교통정보로 이동">1</button>
-                <button class="map-click-marker marker-2" type="button" onclick="scrollToBusStop('stop-2')" aria-label="2번 풍림아파트상가 25162 정류소 교통정보로 이동">2</button>
-                <button class="map-click-marker marker-3" type="button" onclick="scrollToBusStop('stop-3')" aria-label="3번 풍림아파트후문 25161 정류소 교통정보로 이동">3</button>
-            </div>
-        </section>
 
-        <section id="busInfoCard" class="resident-info-card bus-info-card">
-            <div class="bus-card-header">
-                <div>
-                    <div class="section-kicker">교통 정보</div>
-                    <h2>이레하이니스 주변 버스</h2>
-                </div>
-                <div class="bus-badge">불러오는 중</div>
+            <div id="busPanel" class="transport-panel" role="tabpanel" hidden>
+                <section class="stop-map-card">
+                    <div class="bus-card-header">
+                        <div>
+                            <div class="section-kicker">정류소 위치</div>
+                            <h2>이레하이니스 주변 정류소</h2>
+                        </div>
+                        <div class="bus-badge">이미지 안내</div>
+                    </div>
+                    <div class="stop-map-wrap">
+                        <img class="stop-map-image" src="assets/ire-bus-stops-map.svg?v=13" alt="월곶 이레하이니스 주변 풍림아파트상가 정류소 위치 안내 지도">
+                        <div class="stop-map-hint">지도 번호를 누르면 정류소 정보로 이동합니다.</div>
+                        <button class="map-click-marker marker-1" type="button" onclick="scrollToBusStop('stop-1')" aria-label="1번 풍림아파트상가 25162 정류소 교통정보로 이동">1</button>
+                        <button class="map-click-marker marker-2" type="button" onclick="scrollToBusStop('stop-2')" aria-label="2번 풍림아파트상가 25164 정류소 교통정보로 이동">2</button>
+                    </div>
+                </section>
+
+                <section id="busInfoCard" class="bus-info-card">
+                    <div class="bus-card-header">
+                        <div>
+                            <div class="section-kicker">교통 정보</div>
+                            <h2>이레하이니스 주변 버스</h2>
+                        </div>
+                        <div class="bus-badge">불러오는 중</div>
+                    </div>
+                    <p class="bus-note">상·하행 주변 정류소의 경기도 버스 도착 정보를 확인하고 있습니다.</p>
+                </section>
             </div>
-            <p class="bus-note">상·하행 주변 정류소의 경기도 버스 도착 정보를 확인하고 있습니다.</p>
+
+            <div id="subwayPanel" class="transport-panel" role="tabpanel" hidden>
+                <section id="subwayInfoCard" class="subway-info-card">
+                    <div class="bus-card-header">
+                        <div>
+                            <div class="section-kicker">지하철 정보</div>
+                            <h2>월곶역 수인분당선</h2>
+                        </div>
+                        <div class="bus-badge">불러오는 중</div>
+                    </div>
+                    <p class="bus-note">월곶역 수인분당선 도착 정보를 확인하고 있습니다.</p>
+                </section>
+            </div>
         </section>
     </div>
 
-    <script src="js/ocean.js?v=4.4"></script>
+    <script src="js/ocean.js?v=8.5"></script>
 </body>
 </html>
