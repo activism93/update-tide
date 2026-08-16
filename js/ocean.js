@@ -956,10 +956,11 @@ function renderSubwayDirectionMap(direction, arrivals, trainPositions = []) {
         <div class="subway-line-vertical ${direction === '하행' ? 'down' : 'up'}" aria-hidden="true"></div>
         ${stations.map((station, stationIndex) => {
           const trains = trainsByStation[station] || [];
+          const isRouteTerminal = (stationIndex === 0 || stationIndex === stations.length - 1) && station !== '월곶';
           const stationClasses = [
             'subway-station-row',
             station === '월곶' ? 'target-station' : '',
-            stationIndex === 0 || stationIndex === stations.length - 1 ? 'terminal-station' : '',
+            isRouteTerminal ? 'terminal-station' : '',
             stationIndex === 0 ? 'route-start-station' : '',
             stationIndex === stations.length - 1 ? 'route-end-station' : ''
           ].filter(Boolean).join(' ');
