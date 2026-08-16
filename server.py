@@ -808,6 +808,38 @@ def fetch_line_realtime_positions(now=None):
             positions.append(position)
     return positions
 
+
+def line_position_to_arrival(position):
+    return {
+        'direction': position.get('direction') or '',
+        'destination': position.get('destination') or '',
+        'trainLineNm': position.get('destination') or '',
+        'arrivalMessage': '전체 열차 위치 기반 월곶 도착 추정',
+        'currentStation': position.get('currentStation') or '',
+        'arrivalCode': position.get('rawArrivalCode') or '',
+        'trainState': position.get('rawState') or '실시간 위치',
+        'seconds': 0,
+        'minutes': round((position.get('etaSeconds') or 0) / 60) if position.get('etaSeconds') is not None else None,
+        'etaSeconds': position.get('etaSeconds'),
+        'displayTime': position.get('etaLabel') or '',
+        'hasExactEta': False,
+        'stationCount': None,
+        'scheduledTime': '',
+        'predictedArrivalTime': '',
+        'predictionSource': 'LINE_REALTIME_POSITION',
+        'confidence': position.get('confidence') or 'medium',
+        'sourceLabel': '전체 위치 기반',
+        'positionAgeSeconds': position.get('positionAgeSeconds'),
+        'positionEtaMinutes': round((position.get('etaSeconds') or 0) / 60) if position.get('etaSeconds') is not None else None,
+        'scheduleBasis': '수인분당선 전체 실시간 위치 기반 추정',
+        'trainNo': position.get('trainNo') or '',
+        'terminalStation': position.get('terminalStation') or '',
+        'updatedAt': (position.get('positionTimestamp') or '')[:19],
+        'mapState': position.get('mapState') or 'REALTIME_TRACKED',
+        'positionPrecision': position.get('positionPrecision') or 'realtime',
+        'lastRealtimeStation': position.get('lastRealtimeStation') or position.get('currentStation') or '',
+    }
+
 def subway_state_label(code, message):
     code = str(code or '')
     message = str(message or '')
@@ -1316,6 +1348,18 @@ def handle_subway_arrivals(handler, query=None):
         position_note = None
         try:
             line_positions = cached('subway-line-realtime-positions', fetch_line_realtime_positions, SUBWAY_POSITION_CACHE_TTL)
+            wolgot_line_positions = [p for p in line_positions if p.get('reachesWolgot') and p.get('etaSeconds') is not None]
+            for direction in ('상행', '하행'):
+                direction_line_positions = sorted(
+                    [p for p in wolgot_line_positions if p.get('direction') == direction],
+                    key=lambda p: p.get('etaSeconds') or 999999,
+                )
+                if direction_line_positions:
+                    has_non_fallback = any(a.get('direction') == direction and a.get('predictionSource') != 'TIMETABLE_ONLY' for a in arrivals)
+                    arrivals = [a for a in arrivals if not (a.get('direction') == direction and a.get('predictionSource') == 'TIMETABLE_ONLY')]
+                    if not has_non_fallback:
+                        arrivals.append(line_position_to_arrival(direction_line_positions[0]))
+            arrivals.sort(key=lambda x: (x.get('direction') or '', x.get('etaSeconds') if x.get('etaSeconds') is not None else 999999))
             seen_train_numbers = {p.get('trainNo') for p in train_positions if p.get('trainNo')}
             train_positions.extend(p for p in line_positions if not p.get('trainNo') or p.get('trainNo') not in seen_train_numbers)
         except Exception as exc:
