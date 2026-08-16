@@ -25,6 +25,7 @@ GG_BASE_ARRIVAL = 'https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusAr
 GG_BASE_STATION = 'https://apis.data.go.kr/6410000/busstationservice/v2/getBusStationListv2'
 GG_BASE_STATION_ROUTES = 'https://apis.data.go.kr/6410000/busstationservice/v2/getBusStationViaRouteListv2'
 SEOUL_SUBWAY_ARRIVAL = 'http://swopenapi.seoul.go.kr/api/subway/{key}/json/realtimeStationArrival/0/5/{station}'
+SEOUL_SUBWAY_POSITION = 'http://swopenapi.seoul.go.kr/api/subway/{key}/json/realtimePosition/0/200/{line}'
 WINDY_POINT_FORECAST = 'https://api.windy.com/api/point-forecast/v2'
 KMA_ULTRA_NCST = os.getenv('KMA_ULTRA_NCST_URL', 'https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getUltraSrtNcst')
 KMA_ULTRA_FCST = os.getenv('KMA_ULTRA_FCST_URL', 'https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getUltraSrtFcst')
@@ -35,6 +36,7 @@ KMA_NX = os.getenv('KMA_NX', '56')
 KMA_NY = os.getenv('KMA_NY', '123')
 CACHE_TTL = int(os.getenv('BUS_CACHE_TTL_SECONDS', '30'))
 SUBWAY_CACHE_TTL = int(os.getenv('SUBWAY_CACHE_TTL_SECONDS', '15'))
+SUBWAY_POSITION_CACHE_TTL = int(os.getenv('SUBWAY_POSITION_CACHE_TTL_SECONDS', '30'))
 CACHE = {}
 PORTAL_COOKIE_NAME = 'ire_resident_portal'
 PORTAL_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
@@ -684,6 +686,108 @@ def build_train_position(candidate, debug, now, observed_at, station_count):
     })
     return position if validation == 'accepted' else None
 
+
+def realtime_position_direction(current_station, terminal_station, raw_direction=''):
+    current_station = str(current_station or '').strip()
+    terminal_station = terminal_name(terminal_station)
+    if current_station in WOLGOT_ROUTE and terminal_station in WOLGOT_ROUTE:
+        return '상행' if WOLGOT_ROUTE.index(terminal_station) < WOLGOT_ROUTE.index(current_station) else '하행'
+    return {'0': '상행', '1': '하행', '상행': '상행', '하행': '하행'}.get(str(raw_direction), '')
+
+
+def realtime_position_state_label(train_status):
+    return {
+        '0': '진입 중',
+        '1': '정차/도착',
+        '2': '출발',
+        '3': '전역 출발',
+    }.get(str(train_status or ''), '위치 확인 중')
+
+
+def build_line_position_from_realtime(row, now):
+    current_station = str(row.get('statnNm') or '').strip()
+    terminal_station = str(row.get('statnTnm') or '').strip()
+    direction = realtime_position_direction(current_station, terminal_station, row.get('updnLine'))
+    train_no = str(row.get('trainNo') or '').strip()
+    if not current_station or current_station not in WOLGOT_ROUTE or direction not in ('상행', '하행'):
+        return None
+    observed_at = parse_kst_timestamp(row.get('recptnDt'), now) or now
+    age_sec = max(0, (now - observed_at).total_seconds())
+    fresh_ok, fresh_status, fresh_reason = freshness_status(age_sec)
+    if not fresh_ok:
+        return None
+    normalized = normalize_subway_state(row.get('trainSttus'), realtime_position_state_label(row.get('trainSttus')))
+    segment = infer_position_segment(direction, current_station, None, normalized)
+    if not segment:
+        return None
+    start, end, forced_progress, forced_logical = segment
+    start_idx = WOLGOT_ROUTE.index(start)
+    end_idx = WOLGOT_ROUTE.index(end)
+    duration = adjacent_segment_seconds(start, end, direction)
+    elapsed = max(0, (now - observed_at).total_seconds())
+    if forced_progress is not None:
+        progress = forced_progress
+    elif normalized == 'ENTERING':
+        progress = SUBWAY_STATE_PROGRESS['ENTERING']
+    elif normalized in ('DEPARTED', 'DEPARTING'):
+        progress = max(SUBWAY_STATE_PROGRESS['DEPARTED'], min(0.9, elapsed / duration))
+    elif normalized == 'RUNNING':
+        progress = min(0.9, max(0.1, elapsed / duration))
+    else:
+        progress = max(0.05, min(0.9, elapsed / duration))
+    logical = forced_logical if forced_logical is not None else start_idx + (end_idx - start_idx) * progress
+    destination = f'{terminal_station}행' if terminal_station else ''
+    return {
+        'trainId': train_no or f"{direction}-{current_station}-{terminal_station}",
+        'trainNo': train_no,
+        'direction': direction,
+        'destination': destination,
+        'currentStation': current_station,
+        'previousStation': start,
+        'nextStation': end,
+        'normalizedState': normalized,
+        'rawState': realtime_position_state_label(row.get('trainSttus')),
+        'rawArrivalCode': str(row.get('trainSttus') or ''),
+        'positionTimestamp': observed_at.isoformat(),
+        'serverTimestamp': now.isoformat(),
+        'positionAgeSeconds': round(age_sec),
+        'segmentStartStation': start,
+        'segmentEndStation': end,
+        'segmentProgress': round(progress, 3),
+        'estimatedSegmentTravelSeconds': duration,
+        'elapsedSeconds': round(elapsed),
+        'logicalPosition': round(logical, 3),
+        'targetStation': '월곶',
+        'etaSeconds': None,
+        'etaLabel': train_no,
+        'confidence': 'high' if fresh_status == 'FRESH_STRONG' else 'medium',
+        'validationStatus': 'accepted',
+        'predictionSource': 'LINE_REALTIME_POSITION',
+        'mapState': 'REALTIME_TRACKED',
+        'positionPrecision': 'realtime',
+        'lastRealtimeStation': current_station,
+        'routeValidation': 'ROUTE_OK',
+        'routeReason': '수인분당선 전체 실시간 위치 API',
+    }
+
+
+def fetch_line_realtime_positions(now=None):
+    now = now or datetime.now(KST)
+    key = os.getenv('SEOUL_API_KEY') or 'sample'
+    line = os.getenv('SUBWAY_POSITION_LINE_NAME', '수인분당선')
+    encoded_line = urllib.parse.quote(line)
+    url = SEOUL_SUBWAY_POSITION.format(key=urllib.parse.quote(key, safe=''), line=encoded_line)
+    req = urllib.request.Request(url, headers={'User-Agent': 'update-tide-resident-portal/1.0'})
+    with urllib.request.urlopen(req, timeout=8) as resp:
+        data = json.loads(resp.read().decode('utf-8'))
+    rows = data.get('realtimePositionList') or []
+    positions = []
+    for row in rows:
+        position = build_line_position_from_realtime(row, now)
+        if position:
+            positions.append(position)
+    return positions
+
 def subway_state_label(code, message):
     code = str(code or '')
     message = str(message or '')
@@ -1189,6 +1293,13 @@ def handle_subway_arrivals(handler, query=None):
         arrivals, debug_rows = parsed if debug_enabled else (parsed, None)
         position_only_candidates = getattr(parse_subway_arrivals, 'last_position_only_candidates', [])
         train_positions = [a.get('trainPosition') for a in [*arrivals, *position_only_candidates] if a.get('trainPosition')]
+        position_note = None
+        try:
+            line_positions = cached('subway-line-realtime-positions', fetch_line_realtime_positions, SUBWAY_POSITION_CACHE_TTL)
+            seen_train_numbers = {p.get('trainNo') for p in train_positions if p.get('trainNo')}
+            train_positions.extend(p for p in line_positions if not p.get('trainNo') or p.get('trainNo') not in seen_train_numbers)
+        except Exception as exc:
+            position_note = f'전체 열차 위치 API는 현재 사용할 수 없어 월곶 도착 정보만 표시합니다: {exc}'
         payload = {
             'title': '월곶역 수인분당선 도착',
             'stationName': '월곶역',
@@ -1199,8 +1310,11 @@ def handle_subway_arrivals(handler, query=None):
             'stationTopology': WOLGOT_ROUTE,
             'anchorStation': '월곶',
             'source': '서울 열린데이터광장 지하철 실시간 도착정보 API',
-            'predictionPolicy': 'station realtime > fresh position realtime with timestamp correction > timetable fallback',
+            'positionSource': '서울 열린데이터광장 지하철 실시간 열차위치 API · 30초 캐시',
+            'predictionPolicy': 'station realtime ETA > whole-line realtime position > post-Wolgot estimated state > timetable fallback',
         }
+        if position_note:
+            payload['positionNote'] = position_note
         if debug_enabled:
             payload['debug'] = debug_rows
         return payload
