@@ -830,15 +830,11 @@ async function loadSubwayArrivals() {
 const SUINBUNDANG_STATIONS = ['청량리','왕십리','서울숲','압구정로데오','강남구청','선정릉','선릉','한티','도곡','구룡','개포동','대모산입구','수서','복정','가천대','태평','모란','야탑','이매','서현','수내','정자','미금','오리','죽전','보정','구성','신갈','기흥','상갈','청명','영통','망포','매탄권선','수원시청','매교','수원','고색','오목천','어천','야목','사리','한대앞','중앙','고잔','초지','안산','신길온천','정왕','오이도','달월','월곶','소래포구','인천논현','호구포','남동인더스파크','원인재','연수','송도','인하대','숭의','신포','인천'];
 
 
-function nearbySubwayStations(arrivals, trainPositions = []) {
-  const topology = window.subwayTopology || SUINBUNDANG_STATIONS;
-  const wolgotIndex = topology.indexOf('월곶');
-  const trainIndexes = (trainPositions || []).map(t => Number(t.logicalPosition)).filter(v => Number.isFinite(v));
-  const arrivalIndexes = (arrivals || []).map(a => topology.indexOf(a.currentStation)).filter(i => i >= 0);
-  const indexes = [...trainIndexes, ...arrivalIndexes];
-  const min = Math.max(0, Math.floor(Math.min(wolgotIndex - 4, ...(indexes.length ? indexes : [wolgotIndex - 4]))) - 1);
-  const max = Math.min(topology.length - 1, Math.ceil(Math.max(wolgotIndex + 5, ...(indexes.length ? indexes : [wolgotIndex + 5]))) + 1);
-  return topology.slice(min, max + 1);
+function subwayMapStations() {
+  // The realtime layer uses canonical WOLGOT_ROUTE logical indexes. Render the
+  // full topology so post-Wolgot estimated trains can keep moving to their
+  // terminal instead of being clipped to a short nearby slice.
+  return window.subwayTopology || SUINBUNDANG_STATIONS;
 }
 
 function escapeHtml(value) {
@@ -919,7 +915,7 @@ window.addEventListener('load', scheduleSubwayTrainMarkerSync);
 function renderSubwayDirectionMap(direction, arrivals, trainPositions = []) {
   const directionPositions = (trainPositions || []).filter(t => t.direction === direction && t.validationStatus !== 'rejected');
   const directionArrivals = (arrivals || []).filter(a => a.direction === direction);
-  const stations = nearbySubwayStations(directionArrivals, directionPositions);
+  const stations = subwayMapStations();
   const trainsByStation = directionArrivals.reduce((acc, train) => {
     (acc[train.currentStation] ||= []).push(train);
     return acc;
