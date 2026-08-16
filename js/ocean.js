@@ -854,8 +854,9 @@ function renderTrainMarker(train, stations, orderIndex) {
   const rowOffset = logical - firstIndex;
   const lateral = 0;
   const dirClass = train.direction === '하행' ? 'down' : 'up';
-  const precisionClass = train.positionPrecision === 'estimated' ? 'estimated' : 'realtime';
-  const label = train.etaLabel || (train.etaSeconds != null ? `${Math.round(train.etaSeconds / 60)}분` : train.destination || '');
+  const isEstimated = train.positionPrecision === 'estimated';
+  const precisionClass = isEstimated ? 'estimated' : 'realtime';
+  const label = isEstimated ? (train.trainNo || '') : (train.etaLabel || (train.etaSeconds != null ? `${Math.round(train.etaSeconds / 60)}분` : train.destination || ''));
   const precisionLabel = train.positionPrecision === 'estimated' ? '월곶 이후 추정 위치' : '실시간 위치';
   const title = `${train.destination || train.direction} ${train.trainNo || ''} 열차 · ${precisionLabel} · ${train.rawState || train.normalizedState || ''} · ${train.currentStation || ''}`;
   return `
@@ -934,8 +935,15 @@ function renderSubwayDirectionMap(direction, arrivals, trainPositions = []) {
         <div class="subway-line-vertical ${direction === '하행' ? 'down' : 'up'}" aria-hidden="true"></div>
         ${stations.map((station, stationIndex) => {
           const trains = trainsByStation[station] || [];
+          const stationClasses = [
+            'subway-station-row',
+            station === '월곶' ? 'target-station' : '',
+            stationIndex === 0 || stationIndex === stations.length - 1 ? 'terminal-station' : '',
+            stationIndex === 0 ? 'route-start-station' : '',
+            stationIndex === stations.length - 1 ? 'route-end-station' : ''
+          ].filter(Boolean).join(' ');
           return `
-            <div class="subway-station-row ${station === '월곶' ? 'target-station' : ''}" data-station-index="${stationIndex}">
+            <div class="${stationClasses}" data-station-index="${stationIndex}">
               <div class="subway-station-marker"><span class="station-dot"></span></div>
               <div class="subway-station-name">${escapeHtml(station)}</div>
               <div class="subway-train-tags">

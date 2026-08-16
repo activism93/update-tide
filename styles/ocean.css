@@ -2350,11 +2350,14 @@ body {
     white-space: nowrap;
 }
 .train-position-marker.estimated {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
+    background: rgba(255,255,255,0.94);
+    box-shadow: 0 5px 16px rgba(15,76,117,0.18);
+    padding: 3px 7px 3px 3px;
 }
-.train-position-marker.estimated b { display: none; }
+.train-position-marker.estimated b {
+    display: inline;
+    color: #475569;
+}
 .train-position-marker .train-marker {
     position: relative !important;
     left: auto;
@@ -2378,7 +2381,32 @@ body {
     .subway-position-map { --subway-line-center: 37px; }
 }
 
-/* Emphasize the anchor station label. */
+/* Emphasize canonical route endpoints and the anchor station label. */
+.terminal-station .station-dot {
+    width: 17px;
+    height: 17px;
+    background: #fff;
+    border: 4px solid var(--subway-dir-color);
+    box-shadow: 0 0 0 4px rgba(14,116,144,0.12);
+}
+.terminal-station .subway-station-name {
+    font-size: 1.04em;
+    font-weight: 1000;
+    color: #082f49;
+}
+.terminal-station .subway-station-name::after {
+    content: '끝';
+    display: inline-flex;
+    align-items: center;
+    margin-left: 7px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: var(--subway-dir-color);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 950;
+    vertical-align: middle;
+}
 .target-station .subway-station-name {
     color: #082f49;
     font-weight: 1000;
