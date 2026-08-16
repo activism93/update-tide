@@ -19,6 +19,7 @@ import pymysql
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / 'data'
 SUBWAY_EVENT_LOG = DATA_DIR / 'subway_events.jsonl'
+POST_WOLGOT_TRACKS_PATH = DATA_DIR / 'subway_post_wolgot_tracks.json'
 VISIT_METRICS_PATH = DATA_DIR / 'visit_metrics.json'
 GG_BASE_ARRIVAL = 'https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalListv2'
 GG_BASE_STATION = 'https://apis.data.go.kr/6410000/busstationservice/v2/getBusStationListv2'
@@ -233,6 +234,34 @@ DIRECTION_TERMINALS = {
     '하행': {'인천', '오이도'},
 }
 POST_WOLGOT_TRACKS = {}
+
+
+def load_post_wolgot_tracks():
+    if POST_WOLGOT_TRACKS or not POST_WOLGOT_TRACKS_PATH.exists():
+        return
+    try:
+        raw = json.loads(POST_WOLGOT_TRACKS_PATH.read_text(encoding='utf-8'))
+        for key, track in raw.items():
+            last_signal = parse_kst_timestamp(track.get('lastSignalAt'))
+            if not last_signal:
+                continue
+            POST_WOLGOT_TRACKS[key] = {**track, 'lastSignalAt': last_signal}
+    except Exception:
+        POST_WOLGOT_TRACKS.clear()
+
+
+def save_post_wolgot_tracks():
+    try:
+        DATA_DIR.mkdir(exist_ok=True)
+        serializable = {}
+        for key, track in POST_WOLGOT_TRACKS.items():
+            item = dict(track)
+            if hasattr(item.get('lastSignalAt'), 'isoformat'):
+                item['lastSignalAt'] = item['lastSignalAt'].isoformat()
+            serializable[key] = item
+        POST_WOLGOT_TRACKS_PATH.write_text(json.dumps(serializable, ensure_ascii=False, indent=2), encoding='utf-8')
+    except Exception:
+        pass
 
 
 
@@ -731,6 +760,7 @@ def update_post_wolgot_track(candidate, observed_at):
         'lastSignalAt': observed_at,
         'hasKnownTerminal': bool(post_wolgot_segment_plan(direction, destination)),
     }
+    save_post_wolgot_tracks()
     return key
 
 
@@ -850,6 +880,7 @@ def prune_and_build_post_wolgot_positions(now, active_keys=None):
             candidates.append(candidate)
         else:
             POST_WOLGOT_TRACKS.pop(key, None)
+    save_post_wolgot_tracks()
     return candidates
 
 
@@ -1105,6 +1136,7 @@ def timetable_fallback(direction, now, sequence=0):
 
 def parse_subway_arrivals(debug=False, now=None, rows_override=None):
     now = now or datetime.now(KST)
+    load_post_wolgot_tracks()
     if rows_override is None:
         key = os.getenv('SEOUL_API_KEY') or 'sample'
         station = os.getenv('SUBWAY_STATION_NAME', '월곶')
