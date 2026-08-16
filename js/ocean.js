@@ -842,6 +842,7 @@ function subwayMapStations(direction) {
 }
 
 function isVisibleBeforeOrAtWolgot(train) {
+  if (train.reachesWolgot === false) return false;
   const topology = window.subwayTopology || SUINBUNDANG_STATIONS;
   const wolgotIndex = topology.indexOf('월곶');
   const logical = Number(train.logicalPosition);
