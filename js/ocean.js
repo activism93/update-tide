@@ -802,7 +802,7 @@ function switchInfoTab(tabName) {
     panel.classList.toggle('active', isActive);
     panel.hidden = !isActive;
   });
-  if (activeName === 'subway') scheduleSubwayTrainMarkerSync();
+  if (activeName === 'subway') requestAnimationFrame(() => focusSubwayMapsOnWolgot(document));
 }
 
 async function loadSubwayArrivals() {
@@ -945,6 +945,13 @@ function focusSubwayMapsOnWolgot(root = document) {
   scheduleSubwayTrainMarkerSync();
 }
 
+function scheduleSubwayMapFocus(root = document) {
+  requestAnimationFrame(() => {
+    focusSubwayMapsOnWolgot(root);
+    requestAnimationFrame(() => focusSubwayMapsOnWolgot(root));
+  });
+}
+
 window.addEventListener('resize', scheduleSubwayTrainMarkerSync);
 window.addEventListener('load', scheduleSubwayTrainMarkerSync);
 
@@ -1041,7 +1048,7 @@ function renderSubwayArrivals(data) {
     <div class="data-source">출처 ${data.source || '지하철 실시간 도착정보'} · 약 15초 캐시</div>
   `;
   scheduleSubwayTrainMarkerSync();
-  requestAnimationFrame(() => focusSubwayMapsOnWolgot(card));
+  scheduleSubwayMapFocus(card);
 }
 
 function scrollToOceanSection(section) {
