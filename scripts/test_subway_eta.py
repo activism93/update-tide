@@ -84,11 +84,29 @@ assert c is not None and not c['positionOnly'] and c['displayTime'] == '곧 도�
 r = row('T11B','하행','인천행 - 소래포구방면','월곶 도착','월곶','2026-08-10 20:26:00', code='1')
 c, info = server.build_subway_candidate(r, NOW, 0)
 assert c is not None and c['positionOnly'] and c['displayTime'] == '' and c.get('trainPosition'), (c, info)
+assert c['trainPosition']['mapState'] == 'ESTIMATED_AFTER_WOLGOT', c
+assert c['trainPosition']['positionPrecision'] == 'estimated', c
+assert c['trainPosition']['logicalPosition'] > server.WOLGOT_INDEX, c
 
 # Case 11c: truly stale station arrival event should not stay on the map either.
 r = row('T11C','하행','인천행 - 소래포구방면','월곶 도착','월곶','2026-08-10 20:24:00', code='1')
 c, info = server.build_subway_candidate(r, NOW, 0)
 assert c is None and info['freshnessValidation'] == 'STALE_STATION_EVENT_REJECTED', info
+
+# Case 11d: once a train is known at Wolgot, keep estimating it after the API row disappears.
+server.POST_WOLGOT_TRACKS.clear()
+r = row('T11D','상행','오이도행 - 달월방면','월곶 도착','월곶','2026-08-10 20:27:20', code='1')
+a, d = server.parse_subway_arrivals(debug=True, now=NOW, rows_override=[r])
+later = NOW + server.timedelta(seconds=95)
+a, d = server.parse_subway_arrivals(debug=True, now=later, rows_override=[])
+pos = getattr(server.parse_subway_arrivals, 'last_position_only_candidates', [])
+assert any(x['trainNo'] == 'T11D' and x['trainPosition']['logicalPosition'] < server.WOLGOT_INDEX for x in pos), pos
+
+# Case 11e: known-terminal estimated train is removed after terminal arrival + 60s hold.
+much_later = NOW + server.timedelta(seconds=500)
+a, d = server.parse_subway_arrivals(debug=True, now=much_later, rows_override=[])
+pos = getattr(server.parse_subway_arrivals, 'last_position_only_candidates', [])
+assert not any(x['trainNo'] == 'T11D' for x in pos), pos
 
 # Case 12: previous-station entering is not target-station immediate.
 r = row('T12','하행','인천행 - 소래포구방면','전역 진입','달월','2026-08-10 20:27:00', code='4')

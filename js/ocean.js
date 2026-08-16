@@ -858,10 +858,12 @@ function renderTrainMarker(train, stations, orderIndex) {
   const rowOffset = logical - firstIndex;
   const lateral = 0;
   const dirClass = train.direction === '하행' ? 'down' : 'up';
+  const precisionClass = train.positionPrecision === 'estimated' ? 'estimated' : 'realtime';
   const label = train.etaLabel || (train.etaSeconds != null ? `${Math.round(train.etaSeconds / 60)}분` : train.destination || '');
-  const title = `${train.destination || train.direction} ${train.trainNo || ''} · ${train.rawState || train.normalizedState || ''} · ${train.currentStation || ''}`;
+  const precisionLabel = train.positionPrecision === 'estimated' ? '월곶 이후 추정 위치' : '실시간 위치';
+  const title = `${train.destination || train.direction} ${train.trainNo || ''} 열차 · ${precisionLabel} · ${train.rawState || train.normalizedState || ''} · ${train.currentStation || ''}`;
   return `
-    <button class="train-position-marker ${dirClass}" type="button" data-logical-position="${logical}" data-row-offset="${rowOffset}" style="--train-offset:${lateral}px" title="${escapeHtml(title)}">
+    <button class="train-position-marker ${dirClass} ${precisionClass}" type="button" data-position-precision="${escapeHtml(train.positionPrecision || 'realtime')}" data-map-state="${escapeHtml(train.mapState || 'REALTIME_TRACKED')}" data-logical-position="${logical}" data-row-offset="${rowOffset}" style="--train-offset:${lateral}px" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">
       <span class="train-marker ${dirClass}"><i aria-hidden="true"></i></span>
       <b>${escapeHtml(label)}</b>
     </button>

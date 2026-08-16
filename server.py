@@ -225,12 +225,14 @@ KST = ZoneInfo('Asia/Seoul')
 SUBWAY_FRESH_STRONG_SECONDS = 90
 SUBWAY_FRESH_MAX_SECONDS = 180
 SUBWAY_PASSED_GRACE_SECONDS = 30
+POST_WOLGOT_TERMINAL_HOLD_SECONDS = 60
 WOLGOT_ROUTE = ['청량리', '왕십리', '서울숲', '압구정로데오', '강남구청', '선정릉', '선릉', '한티', '도곡', '구룡', '개포동', '대모산입구', '수서', '복정', '가천대', '태평', '모란', '야탑', '이매', '서현', '수내', '정자', '미금', '오리', '죽전', '보정', '구성', '신갈', '기흥', '상갈', '청명', '영통', '망포', '매탄권선', '수원시청', '매교', '수원', '고색', '오목천', '어천', '야목', '사리', '한대앞', '중앙', '고잔', '초지', '안산', '신길온천', '정왕', '오이도', '달월', '월곶', '소래포구', '인천논현', '호구포', '남동인더스파크', '원인재', '연수', '송도', '인하대', '숭의', '신포', '인천']
 WOLGOT_INDEX = WOLGOT_ROUTE.index('월곶')
 DIRECTION_TERMINALS = {
     '상행': {'오이도', '왕십리', '청량리', '죽전', '고색'},
     '하행': {'인천', '오이도'},
 }
+POST_WOLGOT_TRACKS = {}
 
 
 
@@ -635,6 +637,9 @@ def build_train_position(candidate, debug, now, observed_at, station_count):
         'confidence': candidate.get('confidence'),
         'validationStatus': validation,
         'predictionSource': candidate.get('predictionSource'),
+        'mapState': candidate.get('mapState') or 'REALTIME_TRACKED',
+        'positionPrecision': candidate.get('positionPrecision') or 'realtime',
+        'lastRealtimeStation': candidate.get('lastRealtimeStation') or '',
         'routeValidation': route_status,
         'routeReason': route_reason,
     }
@@ -675,6 +680,177 @@ def extract_destination(line):
 
 def terminal_name(destination):
     return str(destination or '').replace('행', '').strip()
+
+
+def post_wolgot_step(direction):
+    return -1 if direction == '상행' else 1
+
+
+def post_wolgot_track_key(train_no, direction, destination):
+    return f"{train_no or ''}|{direction or ''}|{terminal_name(destination) or destination or ''}"
+
+
+def post_wolgot_route(direction, destination):
+    dest = terminal_name(destination)
+    if not dest or dest not in WOLGOT_ROUTE or direction not in ('상행', '하행'):
+        return None
+    terminal_idx = WOLGOT_ROUTE.index(dest)
+    step = post_wolgot_step(direction)
+    if (terminal_idx - WOLGOT_INDEX) * step < 0:
+        return None
+    return WOLGOT_ROUTE[WOLGOT_INDEX:terminal_idx + step:step]
+
+
+def post_wolgot_segment_plan(direction, destination):
+    route = post_wolgot_route(direction, destination)
+    if not route:
+        return None
+    segments = []
+    total = 0
+    for start, end in zip(route, route[1:]):
+        duration = adjacent_segment_seconds(start, end, direction)
+        segments.append((start, end, duration, total))
+        total += duration
+    return {'route': route, 'segments': segments, 'totalSeconds': total}
+
+
+def update_post_wolgot_track(candidate, observed_at):
+    train_no = candidate.get('trainNo') or ''
+    direction = candidate.get('direction') or ''
+    destination = candidate.get('destination') or ''
+    if not train_no or candidate.get('currentStation') != '월곶':
+        return None
+    key = post_wolgot_track_key(train_no, direction, destination)
+    POST_WOLGOT_TRACKS[key] = {
+        'key': key,
+        'trainNo': train_no,
+        'direction': direction,
+        'destination': destination,
+        'terminalStation': terminal_name(destination),
+        'lastRealtimeStation': '월곶',
+        'lastSignalAt': observed_at,
+        'hasKnownTerminal': bool(post_wolgot_segment_plan(direction, destination)),
+    }
+    return key
+
+
+def build_estimated_after_wolgot_candidate(track, now):
+    last_signal = track.get('lastSignalAt')
+    if not last_signal:
+        return None
+    elapsed = max(0, (now - last_signal).total_seconds())
+    direction = track.get('direction') or ''
+    destination = track.get('destination') or ''
+    train_no = track.get('trainNo') or ''
+    plan = post_wolgot_segment_plan(direction, destination)
+    progress = 0.0
+    if not plan:
+        if elapsed > SUBWAY_FRESH_MAX_SECONDS:
+            return None
+        logical = WOLGOT_INDEX
+        segment_start = segment_end = '월곶'
+        map_state = 'ESTIMATED_AFTER_WOLGOT'
+        route_validation_status = 'ROUTE_UNKNOWN_TERMINAL_FALLBACK'
+        route_reason = '종착역 미확인, fallback TTL 적용'
+    else:
+        total = plan['totalSeconds']
+        terminal = plan['route'][-1]
+        if elapsed > total + POST_WOLGOT_TERMINAL_HOLD_SECONDS:
+            return None
+        route_validation_status = 'ROUTE_OK'
+        route_reason = '월곶 이후 종착역까지 추정 이동'
+        if not plan['segments'] or elapsed >= total:
+            logical = WOLGOT_ROUTE.index(terminal)
+            segment_start = segment_end = terminal
+            map_state = 'ARRIVED_AT_TERMINAL'
+        else:
+            map_state = 'ESTIMATED_AFTER_WOLGOT'
+            segment_start, segment_end, duration, offset = plan['segments'][0]
+            for start, end, seg_duration, seg_offset in plan['segments']:
+                if elapsed < seg_offset + seg_duration:
+                    segment_start, segment_end, duration, offset = start, end, seg_duration, seg_offset
+                    break
+            progress = min(1, max(0, (elapsed - offset) / max(1, duration)))
+            start_idx = WOLGOT_ROUTE.index(segment_start)
+            end_idx = WOLGOT_ROUTE.index(segment_end)
+            logical = start_idx + (end_idx - start_idx) * progress
+    position = {
+        'trainId': train_no or f"{direction}-after-wolgot-{destination}",
+        'trainNo': train_no,
+        'direction': direction,
+        'destination': destination,
+        'currentStation': segment_start,
+        'previousStation': segment_start,
+        'nextStation': segment_end,
+        'normalizedState': map_state,
+        'rawState': '월곶 이후 추정 위치',
+        'rawArrivalCode': '',
+        'positionTimestamp': last_signal.isoformat(),
+        'serverTimestamp': now.isoformat(),
+        'positionAgeSeconds': round(elapsed),
+        'segmentStartStation': segment_start,
+        'segmentEndStation': segment_end,
+        'segmentProgress': round(progress, 3),
+        'estimatedSegmentTravelSeconds': adjacent_segment_seconds(segment_start, segment_end, direction),
+        'elapsedSeconds': round(elapsed),
+        'logicalPosition': round(logical, 3),
+        'targetStation': '월곶',
+        'etaSeconds': None,
+        'etaLabel': '',
+        'confidence': 'estimated',
+        'validationStatus': 'accepted',
+        'predictionSource': 'POST_WOLGOT_ESTIMATED',
+        'mapState': map_state,
+        'positionPrecision': 'estimated',
+        'lastRealtimeStation': '월곶',
+        'routeValidation': route_validation_status,
+        'routeReason': route_reason,
+    }
+    return {
+        'direction': direction,
+        'destination': destination,
+        'trainLineNm': destination,
+        'arrivalMessage': '월곶 이후 추정 위치',
+        'currentStation': segment_start,
+        'arrivalCode': '',
+        'trainState': '월곶 이후 추정 위치',
+        'seconds': 0,
+        'minutes': None,
+        'etaSeconds': None,
+        'displayTime': '',
+        'hasExactEta': False,
+        'stationCount': None,
+        'scheduledTime': '',
+        'predictedArrivalTime': '',
+        'predictionSource': 'POST_WOLGOT_ESTIMATED',
+        'confidence': 'estimated',
+        'sourceLabel': '추정 위치',
+        'positionAgeSeconds': round(elapsed),
+        'positionEtaMinutes': None,
+        'scheduleBasis': '월곶 마지막 실시간 신호 기반 추정',
+        'trainNo': train_no,
+        'terminalStation': track.get('terminalStation') or '',
+        'updatedAt': last_signal.strftime('%Y-%m-%d %H:%M:%S'),
+        'positionOnly': True,
+        'mapState': map_state,
+        'positionPrecision': 'estimated',
+        'lastRealtimeStation': '월곶',
+        'trainPosition': position,
+    }
+
+
+def prune_and_build_post_wolgot_positions(now, active_keys=None):
+    active_keys = set(active_keys or [])
+    candidates = []
+    for key in list(POST_WOLGOT_TRACKS.keys()):
+        if key in active_keys:
+            continue
+        candidate = build_estimated_after_wolgot_candidate(POST_WOLGOT_TRACKS[key], now)
+        if candidate:
+            candidates.append(candidate)
+        else:
+            POST_WOLGOT_TRACKS.pop(key, None)
+    return candidates
 
 
 def estimate_remaining_seconds(direction, station_count, current_station=''):
@@ -881,7 +1057,16 @@ def build_subway_candidate(row, now, sequence=0):
         'terminalStation': row.get('bstatnNm') or '',
         'updatedAt': row.get('recptnDt') or '',
         'positionOnly': position_only,
+        'mapState': 'ARRIVED_AT_WOLGOT' if is_immediate and not position_only else ('ESTIMATED_AFTER_WOLGOT' if position_only else 'REALTIME_TRACKED'),
+        'positionPrecision': 'realtime' if not position_only else 'estimated',
+        'lastRealtimeStation': current_station if current_station == '월곶' else '',
     }
+    if is_target_station_event and current_station == '월곶':
+        track_key = update_post_wolgot_track(candidate, observed_at)
+        if position_only and track_key and track_key in POST_WOLGOT_TRACKS:
+            estimated_candidate = build_estimated_after_wolgot_candidate(POST_WOLGOT_TRACKS[track_key], now)
+            if estimated_candidate:
+                return estimated_candidate, debug
     position = build_train_position(candidate, debug, now, observed_at, station_count)
     if position:
         candidate['trainPosition'] = position
@@ -936,6 +1121,7 @@ def parse_subway_arrivals(debug=False, now=None, rows_override=None):
     position_only_candidates = []
     debug_rows = []
     direction_seen = {}
+    active_post_wolgot_keys = set()
     for row in rows:
         direction = str(row.get('updnLine') or '')
         sequence = direction_seen.get(direction, 0)
@@ -943,6 +1129,8 @@ def parse_subway_arrivals(debug=False, now=None, rows_override=None):
         candidate, info = build_subway_candidate(row, now, sequence=sequence)
         debug_rows.append(info)
         if candidate:
+            if candidate.get('trainNo'):
+                active_post_wolgot_keys.add(post_wolgot_track_key(candidate.get('trainNo'), candidate.get('direction'), candidate.get('destination')))
             if candidate.get('positionOnly'):
                 position_only_candidates.append(candidate)
             else:
@@ -953,6 +1141,7 @@ def parse_subway_arrivals(debug=False, now=None, rows_override=None):
         if not any(a['direction'] == direction for a in arrivals):
             arrivals.append(timetable_fallback(direction, now, 0))
     arrivals.sort(key=lambda x: (x['direction'], x.get('etaSeconds', 999999)))
+    position_only_candidates.extend(prune_and_build_post_wolgot_positions(now, active_post_wolgot_keys))
     if position_only_candidates:
         setattr(parse_subway_arrivals, 'last_position_only_candidates', position_only_candidates)
     else:

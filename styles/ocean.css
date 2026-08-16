@@ -2349,6 +2349,12 @@ body {
     font-weight: 950;
     white-space: nowrap;
 }
+.train-position-marker.estimated {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+.train-position-marker.estimated b { display: none; }
 .train-position-marker .train-marker {
     position: relative !important;
     left: auto;
